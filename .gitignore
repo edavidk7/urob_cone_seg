@@ -164,4 +164,5 @@ cython_debug/
 .AppleDouble
 .LSOverride
 .DS_store
-segmentation/fsoco_segmentation*
+fsoco_segmentation*
+train_results/*
