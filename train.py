@@ -85,6 +85,12 @@ def main(config):
     val_dataset = ConeSegmentationDataset(val_pairs, eval_T)
     test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
 
+    ## TODO: David si s tim treba neco udela nebo to zahodi
+    print("Class distribution in train set:")
+    class_dist = determine_class_counts(train_dataset)
+    class_dist_strs = [f"{num:.3f}" for num in class_dist]
+    print(f"Class distribution: {' '.join(class_dist_strs)}")
+
     # Dataloaders
     train_loader = DataLoader(
         train_dataset, batch_size=config["train_batch"], shuffle=True, pin_memory=True)

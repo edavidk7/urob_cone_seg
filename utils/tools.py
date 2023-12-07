@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from tqdm import tqdm
 
 # Class IDs to colors
 classid_to_color = {
@@ -62,3 +63,12 @@ def segmask_iou(pred, target, smooth=1e-5):
     union = torch.logical_or(
         pred_bin, target_bin).float().sum(dim=(2, 3))
     return (intersection + smooth) / (union + smooth)
+
+def determine_class_counts(dataset):
+    class_counts = torch.zeros(N_CLASSES)
+    for _, mask in tqdm(dataset):
+        class_counts += mask.sum(dim=(1, 2))
+    class_counts /= class_counts.sum()
+    return class_counts.detach().numpy()
+
+
