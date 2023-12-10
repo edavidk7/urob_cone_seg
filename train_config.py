@@ -1,7 +1,9 @@
 from torchvision.transforms import Compose
 from utils.transforms import *
+from utils.tools import assert_torch_device
 from fastseg import MobileV3Large, MobileV3Small
 from torch.optim import SGD, Adam, AdamW
+from torch import nn
 
 class_color_jitter = {
     0: {"hue": 0.5, "saturation": 0.5},
@@ -27,9 +29,17 @@ eval_T = transforms.Compose(
     [Normalize(), ResizeWithMask(size=(720, 1280), antialias=True)])
 
 config = {
+    # Model setup
     "model_type": MobileV3Small,
-    "num_filters": 128,
-    "use_aspp": True,
+    "model_kwargs": {"num_classes": 6, "num_filters": 128, "use_aspp": True},
+    # Optimizer setup
+    "optim_type": Adam,
+    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.0001},
+    # Loss setup
+    "loss_fn": nn.CrossEntropyLoss,
+    "loss_kwargs": {"reduction": "none"},
+    "use_weighted_loss": False,  # Gets added to kwargs later
+    # Data setup
     "num_classes": 6,
     "train_size": 0.7,
     "val_size": 0.15,
@@ -42,13 +52,14 @@ config = {
     "imdir": "img",
     "maskdir": "ann",
     "num_epochs": 10,
-    "lr": 0.001,
-    "weight_decay": 0.0005,
-    "optim_type": Adam,
     "device": "mps",
-    "save_path": "./train_results",
+    # Logging and evaluation setup
     "val_freq": 3,
+    "save_path": "./train_results",
     "visualize_random_val_batch": True,
     "test_best": True,
-
 }
+
+if not assert_torch_device(config["device"]):
+    config["device"] = "cpu"
+    print("Specified torch device not available, using CPU.")

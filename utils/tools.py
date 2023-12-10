@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from tqdm import tqdm
+import tqdm
 
 # Class IDs to colors
 classid_to_color = {
@@ -64,11 +64,24 @@ def segmask_iou(pred, target, smooth=1e-5):
         pred_bin, target_bin).float().sum(dim=(2, 3))
     return (intersection + smooth) / (union + smooth)
 
-def determine_class_counts(dataset):
+
+def determine_class_distribution(dataset):
     class_counts = torch.zeros(N_CLASSES)
-    for _, mask in tqdm(dataset):
+    bar = tqdm.tqdm(dataset, desc="Determining class counts")
+    for _, mask in bar:
         class_counts += mask.sum(dim=(1, 2))
     class_counts /= class_counts.sum()
     return class_counts.detach().numpy()
 
 
+def assert_torch_device(device_str):
+    match device_str:
+        case "cpu":
+            return True
+        case "cuda":
+            return torch.cuda.is_available()
+        case "mps":
+            return torch.backends.mps.is_available() and torch.backends.mps.is_built()
+        case _:
+            raise ValueError(
+                f"Device {device_str} not recognized. Choose from 'cpu', 'cuda' or 'mps'.")
