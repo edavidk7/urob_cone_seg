@@ -52,7 +52,7 @@ config = {
     "imdir": "img",
     "maskdir": "ann",
     "num_epochs": 10,
-    "device": "mps",
+    "device": "cuda",
     # Logging and evaluation setup
     "val_freq": 3,
     "save_path": "./train_results",
