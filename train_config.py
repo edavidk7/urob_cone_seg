@@ -43,7 +43,7 @@ config = {
     "num_classes": 6,
     "train_size": 0.7,
     "val_size": 0.15,
-    "train_batch": 4,
+    "train_batch": 8,
     "eval_batch": 2,
     "train_transforms": train_T,
     "eval_transforms": eval_T,
@@ -52,7 +52,7 @@ config = {
     "imdir": "img",
     "maskdir": "ann",
     "num_epochs": 10,
-    "device": "cuda",
+    "device": "cuda:1",
     # Logging and evaluation setup
     "val_freq": 3,
     "save_path": "./train_results",

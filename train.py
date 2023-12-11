@@ -120,11 +120,10 @@ def main(config):
     #  Setup the model
     model = config["model_type"](**config["model_kwargs"])
     model = model.to(device)
-    model = nn.DataParallel(model)
+    # model = nn.DataParallel(model)
 
     #  Setup the optimizer
-    optimizer = config["optim_type"](
-        model.parameters(), **config["optim_kwargs"])
+    optimizer = config["optim_type"](model.parameters(), **config["optim_kwargs"])
 
     #  Setup the loss
     if config["use_weighted_loss"]:
@@ -159,10 +158,8 @@ def main(config):
     weights_path.mkdir(parents=True, exist_ok=True)
 
     # Create the record tensors
-    train_record = torch.zeros(
-        (config["num_epochs"], 1+config["num_classes"]), device=device)
-    val_record = torch.zeros(
-        size=(config["num_epochs"]//config["val_freq"], 1+config["num_classes"]), device=device)
+    train_record = torch.zeros((config["num_epochs"], 1+config["num_classes"]), device=device)
+    val_record = torch.zeros(size=(config["num_epochs"]//config["val_freq"], 1+config["num_classes"]), device=device)
 
     #  Start training
     for e in epoch_bar:
@@ -171,24 +168,24 @@ def main(config):
         total_loss = 0
         total_iou = torch.zeros(config["num_classes"], device=device)
         # Iterate over the training batches
+
         for x, labels in train_loader:
-            try:
-                optimizer.zero_grad()
-                x = x.to(device)
-                labels = labels.to(device)
-                output = model(x)
-                loss = criterion(output, labels)
-                total_loss += loss.mean().item()
-                loss.mean().backward()
-                optimizer.step()
-                batch_iou = segmask_iou(output, labels).mean(dim=0)
-                total_iou += batch_iou
-                loader_bar.update()
-                loader_bar.set_postfix_str(
-                    f"Loss: {loss.mean().item():.4f}, per-class IoU {class_iou_to_str(batch_iou)}", refresh=True)
-            except Exception as ex:
-                Warning(f"Exception: {ex}")
-                continue
+            #try:
+            optimizer.zero_grad()
+            x = x.to(device)
+            labels = labels.to(device)
+            output = model(x)
+            loss = criterion(output, labels)
+            total_loss += loss.mean().item()
+            loss.mean().backward()
+            optimizer.step()
+            batch_iou = segmask_iou(output, labels).mean(dim=0)
+            total_iou += batch_iou
+            loader_bar.update()
+            loader_bar.set_postfix_str(f"Loss: {loss.mean().item():.4f}, per-class IoU {class_iou_to_str(batch_iou)}", refresh=True)
+            #except Exception as ex:
+                # Warning(f"Exception: {ex}")
+                # continue
 
         avg_loss = total_loss / len(train_loader)
         total_iou = total_iou / len(train_loader)
@@ -196,8 +193,7 @@ def main(config):
         train_record[e, 0] = avg_loss
         train_record[e, 1:] = total_iou
         # Update the progress bar and save the last weights
-        epoch_bar.set_postfix_str(
-            f"Last epoch ({e}) avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
+        epoch_bar.set_postfix_str(f"Last epoch ({e}) avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
         torch.save(model.state_dict(), weights_path / "last_weights.pt")
 
         #  Save the best weights

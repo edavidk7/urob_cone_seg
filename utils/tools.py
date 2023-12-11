@@ -84,7 +84,7 @@ def determine_class_distribution(dataset):
 def assert_torch_device(device_str):
     if device_str == "cpu":
         return True
-    elif device_str == "cuda":
+    elif "cuda" in device_str:
         return torch.cuda.is_available()
     elif device_str == "mps":
         return torch.backends.mps.is_available() and torch.backends.mps.is_built()
