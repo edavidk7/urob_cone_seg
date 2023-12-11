@@ -94,8 +94,6 @@ def main(config):
     np.random.seed(config["seed"])
 
     # Load the data
-    print(type(config["data_path"]))
-
     if not Path(config["data_path"]).exists():
         download_dataset()
 
