@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import tqdm
+import os
 
 import zlib
 import base64
@@ -90,7 +91,12 @@ def assert_torch_device(device_str):
     else:
         raise ValueError(f"Device {device_str} not recognized. Choose from 'cpu', 'cuda' or 'mps'.")
 
-def convert_dataset():
+def download_dataset():
+    download_cmd = "curl -o fsoco_segmentation.zip http://fsoco.cs.uni-freiburg.de/datasets/fsoco_segmentation_train.zip"
+    unzip_cmd = "unzip fsoco_segmentation.zip -d fsoco_segmentation"
+    os.system(download_cmd)
+    os.system(unzip_cmd)
+
     dataset = 'fsoco_segmentation'
     dataset_dir = Path(dataset)
     meta = dataset_dir / 'meta.json'

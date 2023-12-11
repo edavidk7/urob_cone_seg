@@ -10,6 +10,7 @@ from utils import *
 from torch.utils.data import DataLoader
 from train_config import config as _config
 from datetime import datetime
+from utils.tools import download_dataset
 import tqdm
 
 
@@ -93,8 +94,12 @@ def main(config):
     np.random.seed(config["seed"])
 
     # Load the data
-    img_mask_pairs = find_files(
-        config["data_path"], config["imdir"], config["maskdir"])
+    print(type(config["data_path"]))
+
+    if not Path(config["data_path"]).exists():
+        download_dataset()
+
+    img_mask_pairs = find_files(config["data_path"], config["imdir"], config["maskdir"])
     train_pairs, val_pairs, test_pairs = split_dataset(img_mask_pairs, config)
 
     # Define the transforms
@@ -107,8 +112,7 @@ def main(config):
     test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
 
     # Dataloaders
-    train_loader = DataLoader(
-        train_dataset, batch_size=config["train_batch"], shuffle=True, pin_memory=True)
+    train_loader = DataLoader(train_dataset, batch_size=config["train_batch"], shuffle=True, pin_memory=True)
     val_loader = DataLoader(val_dataset, batch_size=config["eval_batch"])
     test_loader = DataLoader(test_dataset, batch_size=config["eval_batch"])
 
