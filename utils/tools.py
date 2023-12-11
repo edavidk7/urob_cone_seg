@@ -75,13 +75,11 @@ def determine_class_distribution(dataset):
 
 
 def assert_torch_device(device_str):
-    match device_str:
-        case "cpu":
-            return True
-        case "cuda":
-            return torch.cuda.is_available()
-        case "mps":
-            return torch.backends.mps.is_available() and torch.backends.mps.is_built()
-        case _:
-            raise ValueError(
-                f"Device {device_str} not recognized. Choose from 'cpu', 'cuda' or 'mps'.")
+    if device_str == "cpu":
+        return True
+    elif device_str == "cuda":
+        return torch.cuda.is_available()
+    elif device_str == "mps":
+        return torch.backends.mps.is_available() and torch.backends.mps.is_built()
+    else:
+        raise ValueError(f"Device {device_str} not recognized. Choose from 'cpu', 'cuda' or 'mps'.")
