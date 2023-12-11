@@ -110,8 +110,8 @@ def main(config):
     test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
 
     # Dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=config["train_batch"], shuffle=True, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=config["eval_batch"])
+    train_loader = DataLoader(train_dataset, batch_size=config["train_batch"], shuffle=True, pin_memory=True, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=config["eval_batch"], num_workers=0)
     test_loader = DataLoader(test_dataset, batch_size=config["eval_batch"])
 
     #  Setup the device
@@ -207,10 +207,8 @@ def main(config):
         #  Evaluate the model on the validation set
         if e % config["val_freq"] == 0:
             model.eval()
-            avg_eval_loss, avg_eval_iou = evaluate(
-                model, val_loader, device, criterion, config)
-            tqdm.tqdm.write(
-                f"Validation loss after epoch {e}: {avg_eval_loss:.4f}, per-class IoU: {class_iou_to_str(avg_eval_iou)}")
+            avg_eval_loss, avg_eval_iou = evaluate(model, val_loader, device, criterion, config)
+            tqdm.tqdm.write(f"epoch {e}: trn_loss={avg_loss} val_loss={avg_eval_loss:.4f}, per-class IoU: {class_iou_to_str(avg_eval_iou)}")
             val_record[e//config["val_freq"], 0] = avg_eval_loss
             val_record[e//config["val_freq"], 1:] = avg_eval_iou
             model.train()
@@ -228,8 +226,7 @@ def main(config):
     if config["test_best"]:
         model.load_state_dict(best_weights)
         model.eval()
-        avg_test_loss, avg_test_iou = evaluate(
-            model, test_loader, device, criterion, config)
+        avg_test_loss, avg_test_iou = evaluate(model, test_loader, device, criterion, config)
         print(f"Test loss: {avg_test_loss:.4f}")
         print(f"Test per-class IoU: {class_iou_to_str(avg_test_iou)}")
 

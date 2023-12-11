@@ -20,8 +20,7 @@ train_T = transforms.Compose(
         RandomCropWithMask(size=(512, 512), skip_smaller=True),
         RandomHorizontalFlipWithMask(0.5),
         RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
-        RandomRotationWithMask(
-            degrees=5),
+        RandomRotationWithMask(degrees=5),
         ClasswiseColorJitter(class_color_jitter)
     ])
 
@@ -41,18 +40,18 @@ config = {
     "use_weighted_loss": False,  # Gets added to kwargs later
     # Data setup
     "num_classes": 6,
-    "train_size": 0.7,
-    "val_size": 0.15,
+    "train_size": 0.1,
+    "val_size": 0.1,
     "train_batch": 8,
-    "eval_batch": 2,
-    "train_transforms": train_T,
+    "eval_batch": 4,
+    "train_transforms": eval_T,
     "eval_transforms": eval_T,
     "seed": 42,
     "data_path": "fsoco_segmentation_processed",
     "imdir": "img",
     "maskdir": "ann",
     "num_epochs": 10,
-    "device": "cuda:1",
+    "device": "cuda:2",
     # Logging and evaluation setup
     "val_freq": 3,
     "save_path": "./train_results",
