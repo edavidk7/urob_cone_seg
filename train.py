@@ -10,14 +10,15 @@ from utils import *
 from torch.utils.data import DataLoader
 from train_config import config as _config
 from datetime import datetime
+import gc
 import tqdm
 
 
-def find_files(path="fsoco_segmentation_processed", imdir="img", maskdir="ann"):
+def find_files(path="fsoco_segmentation_processed_np_only", imdir="img", maskdir="ann"):
     """Load the paths to images and corresponding segmentation masks"""
     impath = Path(path) / imdir
     maskpath = Path(path) / maskdir
-    processed_imgs = list(impath.glob("*.jpeg"))
+    processed_imgs = list(impath.glob("*.npz"))
     processed_masks = list(maskpath.glob("*.npz"))
     processed_imgs.sort()
     processed_masks.sort()
@@ -107,16 +108,14 @@ def main(config):
     eval_T = config["eval_transforms"]
 
     # Datasets
-    train_dataset = ConeSegmentationDataset(train_pairs, train_T)
-    val_dataset = ConeSegmentationDataset(val_pairs, eval_T)
-    test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
+    train_dataset = AltConeSegmentationDataset(train_pairs, train_T)
+    val_dataset = AltConeSegmentationDataset(val_pairs, eval_T)
+    test_dataset = AltConeSegmentationDataset(test_pairs, eval_T)
 
     # Dataloaders
-    train_loader = DataLoader(
-        train_dataset, **config["train_loader_kwargs"])
+    train_loader = DataLoader(train_dataset, **config["train_loader_kwargs"])
     val_loader = DataLoader(val_dataset, **config["eval_loader_kwargs"])
-    test_loader = DataLoader(
-        test_dataset, **config["eval_loader_kwargs"])
+    test_loader = DataLoader(test_dataset, **config["eval_loader_kwargs"])
 
     #  Setup the device
     device = torch.device(config["device"])
@@ -169,7 +168,7 @@ def main(config):
         size=(config["num_epochs"], 1+config["num_classes"]), device=device)
 
     #  Start training
-    for e in train_bar:
+    for e in range(config["num_epochs"]):
         train_bar.set_description(f"Epoch {e}")
         total_loss = 0
         total_iou = torch.zeros(config["num_classes"], device=device)
