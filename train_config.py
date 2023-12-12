@@ -41,17 +41,10 @@ config = {
     # Data setup
     "num_classes": 6,
     "train_size": 0.1,
-<<<<<<< HEAD
-    "val_size": 0.1,
-    "train_batch": 8,
-    "eval_batch": 4,
-    "train_transforms": eval_T,
-=======
     "val_size": 0.15,
     "train_batch": 4,
     "eval_batch": 2,
     "train_transforms": train_T,
->>>>>>> main
     "eval_transforms": eval_T,
     "seed": 42,
     "data_path": "fsoco_segmentation_processed",
