@@ -41,7 +41,7 @@ config = {
     "use_weighted_loss": False,  # Gets added to kwargs later
     # Data setup
     "num_classes": 6,
-    "train_size": 0.7,
+    "train_size": 0.1,
     "val_size": 0.15,
     "train_batch": 4,
     "eval_batch": 2,
@@ -54,10 +54,9 @@ config = {
     "num_epochs": 10,
     "device": "mps",
     # Logging and evaluation setup
-    "val_freq": 3,
     "save_path": "./train_results",
     "visualize_random_val_batch": True,
-    "test_best": True,
+    "test_best": False,
 }
 
 if not assert_torch_device(config["device"]):

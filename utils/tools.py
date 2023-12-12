@@ -65,6 +65,12 @@ def segmask_iou(pred, target, smooth=1e-5):
     return (intersection + smooth) / (union + smooth)
 
 
+def class_mask_to_one_hot(mask):
+    """Take a mask containing class value for each pixel to one-hot encoding of size [C, H, W]"""
+    return torch.nn.functional.one_hot(
+        torch.from_numpy(mask).long(), num_classes=N_CLASSES).numpy().transpose(2, 0, 1)
+
+
 def determine_class_distribution(dataset):
     class_counts = torch.zeros(N_CLASSES)
     bar = tqdm.tqdm(dataset, desc="Determining class counts")
