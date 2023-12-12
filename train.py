@@ -75,7 +75,7 @@ def save_and_plot_record_tensor(record, name, train_record_path, config):
     plt.close()
 
 
-def evaluate(model, loader, device, loss_fn, config):
+def evaluate(model, loader, device, loss_fn, config, bar=None):
     total_loss = 0
     total_iou = torch.zeros(config["num_classes"], device=device)
     for x, labels in loader:
@@ -83,8 +83,13 @@ def evaluate(model, loader, device, loss_fn, config):
         labels = labels.to(device)
         output = model(x)
         loss = loss_fn(output, labels)
-        total_iou += segmask_iou(output, labels).mean(dim=0)
+        batch_iou = segmask_iou(output, labels).mean(dim=0)
+        total_iou += batch_iou
         total_loss += loss.mean().item()
+        if bar:
+            bar.set_postfix(
+                phase="eval", loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
+            bar.update()
     return total_loss / len(loader), total_iou / len(loader)
 
 
@@ -150,68 +155,76 @@ def main(config):
     best_epoch = 0
 
     #  Setup the progress bars
-    epoch_bar = tqdm.tqdm(range(config["num_epochs"]), desc="Epochs")
-    loader_bar = tqdm.tqdm(range(len(train_loader)))
+    train_bar = tqdm.tqdm(
+        range(config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
 
     #  Create the weights directory
     weights_path = train_record_path / "weights"
     weights_path.mkdir(parents=True, exist_ok=True)
 
     # Create the record tensors
-    train_record = torch.zeros((config["num_epochs"], 1+config["num_classes"]), device=device)
-    val_record = torch.zeros(size=(config["num_epochs"]//config["val_freq"], 1+config["num_classes"]), device=device)
+    train_record = torch.zeros(
+        (config["num_epochs"], 1+config["num_classes"]), device=device)
+    val_record = torch.zeros(
+        size=(config["num_epochs"], 1+config["num_classes"]), device=device)
 
     #  Start training
-    for e in epoch_bar:
-        loader_bar.reset()
-        loader_bar.set_description(f"Epoch {e}")
+    for e in train_bar:
+        train_bar.set_description(f"Epoch {e}")
         total_loss = 0
         total_iou = torch.zeros(config["num_classes"], device=device)
         # Iterate over the training batches
 
         for x, labels in train_loader:
-            #try:
-            optimizer.zero_grad()
-            x = x.to(device)
-            labels = labels.to(device)
-            output = model(x)
-            loss = criterion(output, labels)
-            total_loss += loss.mean().item()
-            loss.mean().backward()
-            optimizer.step()
-            batch_iou = segmask_iou(output, labels).mean(dim=0)
-            total_iou += batch_iou
-            loader_bar.update()
-            loader_bar.set_postfix_str(f"Loss: {loss.mean().item():.4f}, per-class IoU {class_iou_to_str(batch_iou)}", refresh=True)
-            #except Exception as ex:
-                # Warning(f"Exception: {ex}")
-                # continue
+            try:
+                optimizer.zero_grad()
+                x = x.to(device)
+                labels = labels.to(device)
+                output = model(x)
+                loss = criterion(output, labels)
+                total_loss += loss.mean().item()
+                loss.mean().backward()
+                optimizer.step()
+                batch_iou = segmask_iou(output, labels).mean(dim=0)
+                total_iou += batch_iou
+                train_bar.update()
+                train_bar.set_postfix(phase="train",
+                                      loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
+            except Exception as ex:
+                Warning(f"Exception: {ex}")
+                continue
 
         avg_loss = total_loss / len(train_loader)
         total_iou = total_iou / len(train_loader)
+
         #  Save the record
         train_record[e, 0] = avg_loss
         train_record[e, 1:] = total_iou
-        # Update the progress bar and save the last weights
-        epoch_bar.set_postfix_str(f"Last epoch ({e}) avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
         torch.save(model.state_dict(), weights_path / "last_weights.pt")
 
+        # Evaluate the model on the validation set
+        model.eval()
+        avg_eval_loss, avg_eval_iou = evaluate(
+            model, val_loader, device, criterion, config, bar=train_bar)
+        val_record[e, 0] = avg_eval_loss
+        val_record[e, 1:] = avg_eval_iou
+        model.train()
+
+        # Update the writeout and save the last weights
+        tqdm.tqdm.write(
+            f"Epoch {e}:")
+        tqdm.tqdm.write(
+            f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
+        tqdm.tqdm.write(
+            f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
+
         #  Save the best weights
-        if avg_loss < best_loss:
-            best_loss = avg_loss
+        if avg_eval_loss < best_loss:
+            best_loss = avg_eval_loss
             best_weights = deepcopy(model.state_dict())
             best_epoch = e
-            best_average_iou = total_iou
+            best_average_iou = avg_eval_iou
             torch.save(best_weights, weights_path / "best_weights.pt")
-
-        #  Evaluate the model on the validation set
-        if e % config["val_freq"] == 0:
-            model.eval()
-            avg_eval_loss, avg_eval_iou = evaluate(model, val_loader, device, criterion, config)
-            tqdm.tqdm.write(f"epoch {e}: trn_loss={avg_loss} val_loss={avg_eval_loss:.4f}, per-class IoU: {class_iou_to_str(avg_eval_iou)}")
-            val_record[e//config["val_freq"], 0] = avg_eval_loss
-            val_record[e//config["val_freq"], 1:] = avg_eval_iou
-            model.train()
 
     #  Save the records and plot them
     save_and_plot_record_tensor(
@@ -220,10 +233,10 @@ def main(config):
         val_record, "val", train_record_path, config)
 
     #  Test the best weights
-    print(f"Testing the best weights from epoch {best_epoch}")
     print(f"Best average IoU: {class_iou_to_str(best_average_iou)}")
     print(f"Best loss: {best_loss:.4f}")
     if config["test_best"]:
+        print(f"Testing the best weights from epoch {best_epoch}")
         model.load_state_dict(best_weights)
         model.eval()
         avg_test_loss, avg_test_iou = evaluate(model, test_loader, device, criterion, config)

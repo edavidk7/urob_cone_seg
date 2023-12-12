@@ -41,10 +41,17 @@ config = {
     # Data setup
     "num_classes": 6,
     "train_size": 0.1,
+<<<<<<< HEAD
     "val_size": 0.1,
     "train_batch": 8,
     "eval_batch": 4,
     "train_transforms": eval_T,
+=======
+    "val_size": 0.15,
+    "train_batch": 4,
+    "eval_batch": 2,
+    "train_transforms": train_T,
+>>>>>>> main
     "eval_transforms": eval_T,
     "seed": 42,
     "data_path": "fsoco_segmentation_processed",
@@ -53,10 +60,9 @@ config = {
     "num_epochs": 10,
     "device": "cuda:2",
     # Logging and evaluation setup
-    "val_freq": 3,
     "save_path": "./train_results",
     "visualize_random_val_batch": True,
-    "test_best": True,
+    "test_best": False,
 }
 
 if not assert_torch_device(config["device"]):
