@@ -40,10 +40,8 @@ config = {
     "use_weighted_loss": False,  # Gets added to kwargs later
     # Data setup
     "num_classes": 6,
-    "train_size": 0.1,
+    "train_size": 0.7,
     "val_size": 0.15,
-    "train_batch": 4,
-    "eval_batch": 2,
     "train_transforms": train_T,
     "eval_transforms": eval_T,
     "seed": 42,
@@ -52,10 +50,12 @@ config = {
     "maskdir": "ann",
     "num_epochs": 10,
     "device": "cuda:2",
+    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": True, "num_workers": 4, "batch_size": 2},
+    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": False,  "num_workers": 4, "batch_size": 2},
     # Logging and evaluation setup
     "save_path": "./train_results",
     "visualize_random_val_batch": True,
-    "test_best": False,
+    "test_best": True,
 }
 
 if not assert_torch_device(config["device"]):

@@ -115,9 +115,9 @@ def main(config):
     test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
 
     # Dataloaders
-    train_loader = DataLoader(train_dataset, batch_size=config["train_batch"], shuffle=True, pin_memory=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=config["eval_batch"], num_workers=0)
-    test_loader = DataLoader(test_dataset, batch_size=config["eval_batch"])
+    train_loader = DataLoader(train_dataset, **config["train_loader_kwargs"])
+    val_loader = DataLoader(val_dataset, **config["eval_loader_kwargs"])
+    test_loader = DataLoader(test_dataset, **config["eval_loader_kwargs"])
 
     #  Setup the device
     device = torch.device(config["device"])
