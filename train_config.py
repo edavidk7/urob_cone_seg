@@ -45,7 +45,7 @@ config = {
     "train_transforms": train_T,
     "eval_transforms": eval_T,
     "seed": 42,
-    "data_path": "fsoco_segmentation_processed_np_only",
+    "data_path": "fsoco_segmentation_processed",
     "imdir": "img",
     "maskdir": "ann",
     "num_epochs": 10,
