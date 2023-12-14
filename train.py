@@ -12,7 +12,7 @@ from train_config import config as _config
 from datetime import datetime
 import gc
 import tqdm
-
+import wandb
 
 def find_files(path="fsoco_segmentation_processed_np_only", imdir="img", maskdir="ann"):
     """Load the paths to images and corresponding segmentation masks"""
@@ -48,6 +48,8 @@ def create_train_record(config):
 def class_iou_to_str(iou):
     return "".join([f"{i}: {iou[i]:.4f} " for i in range(len(iou))])
 
+def class_iou_to_dict(iou, prefix):
+    return {f"{prefix}_i": iou[i] for i in range(len(iou))}
 
 def visualize_batch(x, labels, output, loss, iou):
     pass
@@ -92,8 +94,13 @@ def evaluate(model, loader, device, loss_fn, config, bar=None):
             bar.update()
     return total_loss / len(loader), total_iou / len(loader)
 
+def wandb_init(config):
+    wandb.init(project=config["wandb_project"], config=config)
 
 def main(config):
+
+    wandb_init(config)
+
     # Set the seeds
     torch.manual_seed(config["seed"])
     np.random.seed(config["seed"])
@@ -209,12 +216,16 @@ def main(config):
         model.train()
 
         # Update the writeout and save the last weights
-        tqdm.tqdm.write(
-            f"Epoch {e}:")
-        tqdm.tqdm.write(
-            f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
-        tqdm.tqdm.write(
-            f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
+        tqdm.tqdm.write(f"Epoch {e}:")
+        tqdm.tqdm.write(f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
+        tqdm.tqdm.write(f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
+
+        wandb.log({
+            "trn_loss": avg_loss, 
+            "tst_loss": avg_eval_loss, 
+            **class_iou_to_dict(avg_eval_iou, prefix="tst_")
+            **class_iou_to_dict(total_iou, prefix="trn_")
+        })
 
         #  Save the best weights
         if avg_eval_loss < best_loss:
@@ -225,10 +236,8 @@ def main(config):
             torch.save(best_weights, weights_path / "best_weights.pt")
 
     #  Save the records and plot them
-    save_and_plot_record_tensor(
-        train_record, "train", train_record_path, config)
-    save_and_plot_record_tensor(
-        val_record, "val", train_record_path, config)
+    save_and_plot_record_tensor(train_record, "train", train_record_path, config)
+    save_and_plot_record_tensor(val_record, "val", train_record_path, config)
 
     #  Test the best weights
     print(f"Best average IoU: {class_iou_to_str(best_average_iou)}")
@@ -237,8 +246,7 @@ def main(config):
         print(f"Testing the best weights from epoch {best_epoch}")
         model.load_state_dict(best_weights)
         model.eval()
-        avg_test_loss, avg_test_iou = evaluate(
-            model, test_loader, device, criterion, config)
+        avg_test_loss, avg_test_iou = evaluate(model, test_loader, device, criterion, config)
         print(f"Test loss: {avg_test_loss:.4f}")
         print(f"Test per-class IoU: {class_iou_to_str(avg_test_iou)}")
 

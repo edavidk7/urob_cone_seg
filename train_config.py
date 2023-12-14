@@ -57,6 +57,8 @@ config = {
     "save_path": "./train_results",
     "visualize_random_val_batch": True,
     "test_best": True,
+    # wandb config
+    "wandb_project": "fsoco-segmentation",
 }
 
 if not assert_torch_device(config["device"]):
