@@ -20,6 +20,8 @@ def find_files(path="fsoco_segmentation_processed_np_only", imdir="img", maskdir
     impath = Path(path) / imdir
     maskpath = Path(path) / maskdir
     processed_imgs = list(impath.glob("*.npz"))
+    if len(processed_imgs) == 0:
+        processed_imgs = list(impath.glob("*.jpeg"))
     processed_masks = list(maskpath.glob("*.npz"))
     processed_imgs.sort()
     processed_masks.sort()
@@ -50,7 +52,7 @@ def class_iou_to_str(iou):
     return "".join([f"{i}: {iou[i]:.4f} " for i in range(len(iou))])
 
 def class_iou_to_dict(iou, prefix):
-    return {f"{prefix}_i": iou[i] for i in range(len(iou))}
+    return {f"{prefix}_iou/{i}": iou[i] for i in range(len(iou))}
 
 def visualize_batch(x, labels, output, loss, iou):
     pass
@@ -111,6 +113,7 @@ def main(config):
         download_dataset()
 
     img_mask_pairs = find_files(config["data_path"], config["imdir"], config["maskdir"])
+
     train_pairs, val_pairs, test_pairs = split_dataset(img_mask_pairs, config)
 
     # Define the transforms
@@ -118,9 +121,12 @@ def main(config):
     eval_T = config["eval_transforms"]
 
     # Datasets
-    train_dataset = AltConeSegmentationDataset(train_pairs, train_T)
-    val_dataset = AltConeSegmentationDataset(val_pairs, eval_T)
-    test_dataset = AltConeSegmentationDataset(test_pairs, eval_T)
+    # train_dataset = AltConeSegmentationDataset(train_pairs, train_T)
+    # val_dataset = AltConeSegmentationDataset(val_pairs, eval_T)
+    # test_dataset = AltConeSegmentationDataset(test_pairs, eval_T)
+    train_dataset = ConeSegmentationDataset(train_pairs, train_T)
+    val_dataset = ConeSegmentationDataset(val_pairs, eval_T)
+    test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
 
     # Dataloaders
     train_loader = DataLoader(train_dataset, **config["train_loader_kwargs"])
@@ -163,18 +169,15 @@ def main(config):
     best_epoch = 0
 
     #  Setup the progress bars
-    train_bar = tqdm.tqdm(
-        range(config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
+    train_bar = tqdm.tqdm(range(config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
 
     #  Create the weights directory
     weights_path = train_record_path / "weights"
     weights_path.mkdir(parents=True, exist_ok=True)
 
     # Create the record tensors
-    train_record = torch.zeros(
-        (config["num_epochs"], 1+config["num_classes"]), device=device)
-    val_record = torch.zeros(
-        size=(config["num_epochs"], 1+config["num_classes"]), device=device)
+    train_record = torch.zeros((config["num_epochs"], 1+config["num_classes"]), device=device)
+    val_record = torch.zeros(size=(config["num_epochs"], 1+config["num_classes"]), device=device)
 
     #  Start training
     for e in range(config["num_epochs"]):
@@ -226,8 +229,8 @@ def main(config):
         wandb.log({
             "trn_loss": avg_loss, 
             "tst_loss": avg_eval_loss, 
-            **class_iou_to_dict(avg_eval_iou, prefix="tst_")
-            **class_iou_to_dict(total_iou, prefix="trn_")
+            **class_iou_to_dict(avg_eval_iou, prefix="tst"),
+            **class_iou_to_dict(total_iou, prefix="trn")
         })
 
         #  Save the best weights

@@ -40,7 +40,7 @@ config = {
     "use_weighted_loss": False,  # Gets added to kwargs later
     # Data setup
     "num_classes": 6,
-    "train_size": 0.7,
+    "train_size": 0.01,
     "val_size": 0.15,
     "train_transforms": train_T,
     "eval_transforms": eval_T,
@@ -50,8 +50,8 @@ config = {
     "maskdir": "ann",
     "num_epochs": 10,
     "device": "cuda:2",
-    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": True, "num_workers": 4, "batch_size": 2},
-    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": False,  "num_workers": 4, "batch_size": 2},
+    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": True, "num_workers": 0, "batch_size": 2},
+    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": False,  "num_workers": 0, "batch_size": 2},
     # Logging and evaluation setup
     "save_path": "./train_results",
     "visualize_random_val_batch": True,
