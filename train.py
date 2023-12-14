@@ -10,11 +10,8 @@ from utils import *
 from torch.utils.data import DataLoader
 from train_config import config as _config
 from datetime import datetime
-<<<<<<< HEAD
 from utils.tools import download_dataset
-=======
 import gc
->>>>>>> main
 import tqdm
 import wandb
 
