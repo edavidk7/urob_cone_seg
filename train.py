@@ -10,7 +10,11 @@ from utils import *
 from torch.utils.data import DataLoader
 from train_config import config as _config
 from datetime import datetime
+<<<<<<< HEAD
+from utils.tools import download_dataset
+=======
 import gc
+>>>>>>> main
 import tqdm
 import wandb
 
@@ -106,8 +110,10 @@ def main(config):
     np.random.seed(config["seed"])
 
     # Load the data
-    img_mask_pairs = find_files(
-        config["data_path"], config["imdir"], config["maskdir"])
+    if not Path(config["data_path"]).exists():
+        download_dataset()
+
+    img_mask_pairs = find_files(config["data_path"], config["imdir"], config["maskdir"])
     train_pairs, val_pairs, test_pairs = split_dataset(img_mask_pairs, config)
 
     # Define the transforms
@@ -130,11 +136,10 @@ def main(config):
     #  Setup the model
     model = config["model_type"](**config["model_kwargs"])
     model = model.to(device)
-    model = nn.DataParallel(model)
+    # model = nn.DataParallel(model)
 
     #  Setup the optimizer
-    optimizer = config["optim_type"](
-        model.parameters(), **config["optim_kwargs"])
+    optimizer = config["optim_type"](model.parameters(), **config["optim_kwargs"])
 
     #  Setup the loss
     if config["use_weighted_loss"]:
@@ -180,6 +185,7 @@ def main(config):
         total_loss = 0
         total_iou = torch.zeros(config["num_classes"], device=device)
         # Iterate over the training batches
+
         for x, labels in train_loader:
             try:
                 optimizer.zero_grad()

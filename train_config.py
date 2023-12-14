@@ -20,8 +20,7 @@ train_T = transforms.Compose(
         RandomCropWithMask(size=(512, 512), skip_smaller=True),
         RandomHorizontalFlipWithMask(0.5),
         RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
-        RandomRotationWithMask(
-            degrees=5),
+        RandomRotationWithMask(degrees=5),
         ClasswiseColorJitter(class_color_jitter)
     ])
 
@@ -50,7 +49,7 @@ config = {
     "imdir": "img",
     "maskdir": "ann",
     "num_epochs": 10,
-    "device": "mps",
+    "device": "cuda:2",
     "train_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": True, "num_workers": 4, "batch_size": 2},
     "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": False,  "num_workers": 4, "batch_size": 2},
     # Logging and evaluation setup
