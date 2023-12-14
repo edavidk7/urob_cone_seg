@@ -3,7 +3,8 @@
 import torch
 import torch.nn as nn
 
-from geffnet import tf_efficientnet_b4, tf_efficientnet_b0
+from .geffnet import tf_efficientnet_b4, tf_efficientnet_b0
+
 
 class EfficientNet_B4(nn.Module):
     def __init__(self, output_stride=8, BatchNorm=nn.BatchNorm2d,

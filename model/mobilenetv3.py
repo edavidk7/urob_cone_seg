@@ -3,8 +3,8 @@
 import torch
 import torch.nn as nn
 
-from geffnet import tf_mobilenetv3_large_100, tf_mobilenetv3_small_100
-from geffnet.efficientnet_builder import InvertedResidual, Conv2dSame, Conv2dSameExport
+from .geffnet import tf_mobilenetv3_large_100, tf_mobilenetv3_small_100
+from .geffnet.efficientnet_builder import InvertedResidual, Conv2dSame, Conv2dSameExport
 
 class MobileNetV3_Large(nn.Module):
     def __init__(self, trunk=tf_mobilenetv3_large_100, pretrained=False):
