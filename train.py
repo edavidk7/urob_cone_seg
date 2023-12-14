@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
 from copy import deepcopy
 import torch
 import torch.nn as nn
@@ -10,23 +9,10 @@ from utils import *
 from torch.utils.data import DataLoader
 from train_config import config as _config
 from datetime import datetime
-from utils.tools import download_dataset
 import gc
+import argparse
 import tqdm
 import wandb
-
-def find_files(path="fsoco_segmentation_processed_np_only", imdir="img", maskdir="ann"):
-    """Load the paths to images and corresponding segmentation masks"""
-    impath = Path(path) / imdir
-    maskpath = Path(path) / maskdir
-    processed_imgs = list(impath.glob("*.npz"))
-    if len(processed_imgs) == 0:
-        processed_imgs = list(impath.glob("*.jpeg"))
-    processed_masks = list(maskpath.glob("*.npz"))
-    processed_imgs.sort()
-    processed_masks.sort()
-    img_mask_pairs = list(zip(processed_imgs, processed_masks))
-    return img_mask_pairs
 
 
 def split_dataset(img_mask_pairs, config):
@@ -40,6 +26,8 @@ def split_dataset(img_mask_pairs, config):
 def create_train_record(config):
     now = datetime.now()
     dt_string = now.strftime("%d-%m-%Y_%H-%M-%S")
+    if "wandb_name" in config:
+        dt_string = config["wandb_name"] + "_" + dt_string
     train_record_path = Path(config["save_path"]) / dt_string
     train_record_path.mkdir(parents=True, exist_ok=True)
     with open(train_record_path / "config.txt", "w") as f:
@@ -51,8 +39,10 @@ def create_train_record(config):
 def class_iou_to_str(iou):
     return "".join([f"{i}: {iou[i]:.4f} " for i in range(len(iou))])
 
+
 def class_iou_to_dict(iou, prefix):
     return {f"{prefix}_iou/{i}": iou[i] for i in range(len(iou))}
+
 
 def visualize_batch(x, labels, output, loss, iou):
     pass
@@ -97,22 +87,19 @@ def evaluate(model, loader, device, loss_fn, config, bar=None):
             bar.update()
     return total_loss / len(loader), total_iou / len(loader)
 
+
 def wandb_init(config):
-    wandb.init(project=config["wandb_project"], config=config)
+    wandb.init(project=config["wandb_project"], config=config,
+               name=config["wandb_name"] if "wandb_name" in config else None)
+
 
 def main(config):
-
-    wandb_init(config)
-
     # Set the seeds
     torch.manual_seed(config["seed"])
     np.random.seed(config["seed"])
 
-    # Load the data
-    if not Path(config["data_path"]).exists():
-        download_dataset()
-
-    img_mask_pairs = find_files(config["data_path"], config["imdir"], config["maskdir"])
+    img_mask_pairs = find_mask_img_pairs(
+        config["data_path"], config["imdir"], config["maskdir"])
 
     train_pairs, val_pairs, test_pairs = split_dataset(img_mask_pairs, config)
 
@@ -121,12 +108,9 @@ def main(config):
     eval_T = config["eval_transforms"]
 
     # Datasets
-    train_dataset = AltConeSegmentationDataset(train_pairs, train_T)
-    val_dataset = AltConeSegmentationDataset(val_pairs, eval_T)
-    test_dataset = AltConeSegmentationDataset(test_pairs, eval_T)
-    # train_dataset = ConeSegmentationDataset(train_pairs, train_T)
-    # val_dataset = ConeSegmentationDataset(val_pairs, eval_T)
-    # test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
+    train_dataset = ConeSegmentationDataset(train_pairs, train_T)
+    val_dataset = ConeSegmentationDataset(val_pairs, eval_T)
+    test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
 
     # Dataloaders
     train_loader = DataLoader(train_dataset, **config["train_loader_kwargs"])
@@ -139,10 +123,12 @@ def main(config):
     #  Setup the model
     model = config["model_type"](**config["model_kwargs"])
     model = model.to(device)
-    # model = nn.DataParallel(model)
+    if config["dataparallel"]:
+        model = nn.DataParallel(model)
 
     #  Setup the optimizer
-    optimizer = config["optim_type"](model.parameters(), **config["optim_kwargs"])
+    optimizer = config["optim_type"](
+        model.parameters(), **config["optim_kwargs"])
 
     #  Setup the loss
     if config["use_weighted_loss"]:
@@ -161,6 +147,9 @@ def main(config):
     # Create the train record
     train_record_path = create_train_record(config)
 
+    # Initialize wandb
+    wandb_init(config)
+
     # Training loop
     model.train()
     best_loss = torch.inf
@@ -169,15 +158,18 @@ def main(config):
     best_epoch = 0
 
     #  Setup the progress bars
-    train_bar = tqdm.tqdm(range(config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
+    train_bar = tqdm.tqdm(range(
+        config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
 
     #  Create the weights directory
     weights_path = train_record_path / "weights"
     weights_path.mkdir(parents=True, exist_ok=True)
 
     # Create the record tensors
-    train_record = torch.zeros((config["num_epochs"], 1+config["num_classes"]), device=device)
-    val_record = torch.zeros(size=(config["num_epochs"], 1+config["num_classes"]), device=device)
+    train_record = torch.zeros(
+        (config["num_epochs"], 1+config["num_classes"]), device=device)
+    val_record = torch.zeros(
+        size=(config["num_epochs"], 1+config["num_classes"]), device=device)
 
     #  Start training
     for e in range(config["num_epochs"]):
@@ -211,7 +203,7 @@ def main(config):
         #  Save the record
         train_record[e, 0] = avg_loss
         train_record[e, 1:] = total_iou
-        torch.save(model.state_dict(), weights_path / "last_weights.pt")
+        torch.save(model.state_dict(), weights_path / f"epoch{e}_weights.pt")
 
         # Evaluate the model on the validation set
         model.eval()
@@ -223,12 +215,14 @@ def main(config):
 
         # Update the writeout and save the last weights
         tqdm.tqdm.write(f"Epoch {e}:")
-        tqdm.tqdm.write(f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
-        tqdm.tqdm.write(f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
+        tqdm.tqdm.write(
+            f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
+        tqdm.tqdm.write(
+            f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
 
         wandb.log({
-            "trn_loss": avg_loss, 
-            "tst_loss": avg_eval_loss, 
+            "trn_loss": avg_loss,
+            "tst_loss": avg_eval_loss,
             **class_iou_to_dict(avg_eval_iou, prefix="tst"),
             **class_iou_to_dict(total_iou, prefix="trn")
         })
@@ -241,8 +235,12 @@ def main(config):
             best_average_iou = avg_eval_iou
             torch.save(best_weights, weights_path / "best_weights.pt")
 
+        if config["manual_gc"]:
+            gc.collect()
+
     #  Save the records and plot them
-    save_and_plot_record_tensor(train_record, "train", train_record_path, config)
+    save_and_plot_record_tensor(
+        train_record, "train", train_record_path, config)
     save_and_plot_record_tensor(val_record, "val", train_record_path, config)
 
     #  Test the best weights
@@ -252,10 +250,17 @@ def main(config):
         print(f"Testing the best weights from epoch {best_epoch}")
         model.load_state_dict(best_weights)
         model.eval()
-        avg_test_loss, avg_test_iou = evaluate(model, test_loader, device, criterion, config)
+        avg_test_loss, avg_test_iou = evaluate(
+            model, test_loader, device, criterion, config)
         print(f"Test loss: {avg_test_loss:.4f}")
         print(f"Test per-class IoU: {class_iou_to_str(avg_test_iou)}")
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--name", type=str, default=None,
+                        help="Name of the run for wandb")
+    args = parser.parse_args()
+    if args.name:
+        _config["wandb_name"] = args.name
     main(_config)

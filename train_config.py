@@ -1,7 +1,7 @@
 from torchvision.transforms import Compose
 from utils.transforms import *
 from utils.tools import assert_torch_device
-from fastseg import MobileV3Large, MobileV3Small
+from model import MobileV3Large, MobileV3Small
 from torch.optim import SGD, Adam, AdamW
 from torch import nn
 
@@ -33,31 +33,34 @@ config = {
     "model_kwargs": {"num_classes": 6, "num_filters": 128, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
-    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.0001},
+    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.005},
     # Loss setup
     "loss_fn": nn.CrossEntropyLoss,
     "loss_kwargs": {"reduction": "none"},
     "use_weighted_loss": False,  # Gets added to kwargs later
     # Data setup
     "num_classes": 6,
-    "train_size": 0.01,
+    "train_size": 0.7,
     "val_size": 0.15,
     "train_transforms": train_T,
     "eval_transforms": eval_T,
     "seed": 42,
     "data_path": "fsoco_segmentation_processed",
-    "imdir": "img",
-    "maskdir": "ann",
+    "imdir": "imgs",
+    "maskdir": "masks",
     "num_epochs": 10,
-    "device": "cuda:2",
-    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": True, "num_workers": 0, "batch_size": 2},
-    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": False,  "num_workers": 0, "batch_size": 2},
+    "device": "mps",
+    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": True, "num_workers": 4, "batch_size": 2},
+    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": False,  "num_workers": 4, "batch_size": 2},
+    "dataparallel": True,
     # Logging and evaluation setup
     "save_path": "./train_results",
     "visualize_random_val_batch": True,
     "test_best": True,
     # wandb config
     "wandb_project": "fsoco-segmentation",
+    # GC
+    "manual_gc": False,
 }
 
 if not assert_torch_device(config["device"]):

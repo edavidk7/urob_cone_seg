@@ -166,3 +166,5 @@ cython_debug/
 .DS_store
 fsoco_segmentation*
 train_results/*
+scratch.ipynb
+wandb
