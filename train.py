@@ -69,7 +69,7 @@ def save_and_plot_record_tensor(record, name, train_record_path, config, epoch=-
     plt.close()
 
 
-def evaluate(model, loader, device, loss_fn, config, bar=None):
+def evaluate(model, loader, device, loss_fn, config, bar=None, save_path=None):
     total_loss = 0
     total_iou = torch.zeros(config["num_classes"], device=device)
     for x, labels in loader:
@@ -83,6 +83,14 @@ def evaluate(model, loader, device, loss_fn, config, bar=None):
         if bar:
             bar.set_postfix(phase="eval", loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
             bar.update()
+
+        if save_path is not None:
+            save_path.mkdir(parents=True, exist_ok=True)
+            plt.figure(figsize=(10, 10))
+            plt.imshow(x[0].permute(1, 2, 0).cpu().numpy())
+            plt.savefig(save_path / "input.png")
+
+
     return total_loss / len(loader), total_iou / len(loader)
 
 
@@ -198,7 +206,7 @@ def main(config):
 
         # Evaluate the model on the validation set
         model.eval()
-        avg_eval_loss, avg_eval_iou = evaluate(model, val_loader, device, criterion, config, bar=train_bar)
+        avg_eval_loss, avg_eval_iou = evaluate(model, val_loader, device, criterion, config, train_bar, train_record_path / f"val")
         val_record[e, 0] = avg_eval_loss
         val_record[e, 1:] = avg_eval_iou
         model.train()
