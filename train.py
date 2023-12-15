@@ -15,13 +15,11 @@ import tqdm
 import wandb
 plt.rcParams["backend"] = "Agg"
 
-
 def split_dataset(img_mask_pairs, config):
     train_count = int(len(img_mask_pairs) * config["train_size"])
     val_count = int(len(img_mask_pairs) * config["val_size"])
     test_count = len(img_mask_pairs) - train_count - val_count
-    return torch.utils.data.random_split(
-        img_mask_pairs, [train_count, val_count, test_count])
+    return torch.utils.data.random_split(img_mask_pairs, [train_count, val_count, test_count])
 
 
 def create_train_record(config):
@@ -53,10 +51,8 @@ def save_and_plot_record_tensor(record, name, train_record_path, config, epoch=-
     if epoch == -1:
         epoch = config["num_epochs"]
     #  Save to csv
-    header = "loss," + \
-        ",".join([f"iou_{i}" for i in range(config["num_classes"])])
-    np.savetxt(train_record_path / (name + "_record.csv"),
-               record.cpu().numpy(), header=header, delimiter=",")
+    header = "loss," + ",".join([f"iou_{i}" for i in range(config["num_classes"])])
+    np.savetxt(train_record_path / (name + "_record.csv"), record.cpu().numpy(), header=header, delimiter=",")
     #  Plot the loss
     plt.plot(record[:epoch + 1, 0].cpu().numpy())
     plt.xlabel("Epoch")
@@ -85,15 +81,13 @@ def evaluate(model, loader, device, loss_fn, config, bar=None):
         total_iou += batch_iou
         total_loss += loss.mean().item()
         if bar:
-            bar.set_postfix(
-                phase="eval", loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
+            bar.set_postfix(phase="eval", loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
             bar.update()
     return total_loss / len(loader), total_iou / len(loader)
 
 
 def wandb_init(config):
-    wandb.init(project=config["wandb_project"], config=config,
-               name=config["wandb_name"] if "wandb_name" in config else None)
+    wandb.init(project=config["wandb_project"], config=config, name=config["wandb_name"] if "wandb_name" in config else None)
 
 
 def main(config):
@@ -101,8 +95,7 @@ def main(config):
     torch.manual_seed(config["seed"])
     np.random.seed(config["seed"])
 
-    img_mask_pairs = find_mask_img_pairs(
-        config["data_path"], config["imdir"], config["maskdir"])
+    img_mask_pairs = find_mask_img_pairs(config["data_path"], config["imdir"], config["maskdir"])
 
     train_pairs, val_pairs, test_pairs = split_dataset(img_mask_pairs, config)
 
@@ -130,8 +123,7 @@ def main(config):
         model = nn.DataParallel(model)
 
     #  Setup the optimizer
-    optimizer = config["optim_type"](
-        model.parameters(), **config["optim_kwargs"])
+    optimizer = config["optim_type"](model.parameters(), **config["optim_kwargs"])
 
     #  Setup the loss
     if config["use_weighted_loss"]:
@@ -161,18 +153,15 @@ def main(config):
     best_epoch = 0
 
     #  Setup the progress bars
-    train_bar = tqdm.tqdm(range(
-        config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
+    train_bar = tqdm.tqdm(range(config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
 
     #  Create the weights directory
     weights_path = train_record_path / "weights"
     weights_path.mkdir(parents=True, exist_ok=True)
 
     # Create the record tensors
-    train_record = torch.zeros(
-        (config["num_epochs"], 1 + config["num_classes"]), device=device)
-    val_record = torch.zeros(
-        size=(config["num_epochs"], 1 + config["num_classes"]), device=device)
+    train_record = torch.zeros((config["num_epochs"], 1 + config["num_classes"]), device=device)
+    val_record = torch.zeros(size=(config["num_epochs"], 1 + config["num_classes"]), device=device)
 
     #  Start training
     for e in range(config["num_epochs"]):
@@ -194,8 +183,7 @@ def main(config):
                 batch_iou = segmask_iou(output, labels).mean(dim=0)
                 total_iou += batch_iou
                 train_bar.update()
-                train_bar.set_postfix(phase="train",
-                                      loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
+                train_bar.set_postfix(phase="train", loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
             except Exception as ex:
                 tqdm.tqdm.write(f"Exception: {ex}")
                 continue
@@ -210,18 +198,15 @@ def main(config):
 
         # Evaluate the model on the validation set
         model.eval()
-        avg_eval_loss, avg_eval_iou = evaluate(
-            model, val_loader, device, criterion, config, bar=train_bar)
+        avg_eval_loss, avg_eval_iou = evaluate(model, val_loader, device, criterion, config, bar=train_bar)
         val_record[e, 0] = avg_eval_loss
         val_record[e, 1:] = avg_eval_iou
         model.train()
 
         # Update the writeout and save the last weights
         tqdm.tqdm.write(f"Epoch {e}:")
-        tqdm.tqdm.write(
-            f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
-        tqdm.tqdm.write(
-            f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
+        tqdm.tqdm.write(f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
+        tqdm.tqdm.write(f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
 
         wandb.log({
             "trn_loss": avg_loss,
@@ -239,10 +224,8 @@ def main(config):
             torch.save(best_weights, weights_path / "best_weights.pt")
 
         #  Save the records and plot them
-        save_and_plot_record_tensor(
-            train_record, "train", train_record_path, config, epoch=e)
-        save_and_plot_record_tensor(
-            val_record, "val", train_record_path, config, epoch=e)
+        save_and_plot_record_tensor(train_record, "train", train_record_path, config, epoch=e)
+        save_and_plot_record_tensor(val_record, "val", train_record_path, config, epoch=e)
 
         if config["manual_gc"]:
             gc.collect()
@@ -254,8 +237,7 @@ def main(config):
         print(f"Testing the best weights from epoch {best_epoch}")
         model.load_state_dict(best_weights)
         model.eval()
-        avg_test_loss, avg_test_iou = evaluate(
-            model, test_loader, device, criterion, config)
+        avg_test_loss, avg_test_iou = evaluate(model, test_loader, device, criterion, config)
         print(f"Test loss: {avg_test_loss:.4f}")
         print(f"Test per-class IoU: {class_iou_to_str(avg_test_iou)}")
 
