@@ -91,9 +91,11 @@ def evaluate(model, loader, device, loss_fn, config, bar=None, save_path=None):
             save_path.mkdir(parents=True, exist_ok=True)
             # plt.figure(figsize=(10, 10))
             print("backend: ", matplotlib.get_backend())
-            plt.imshow(x[0].permute(1, 2, 0).cpu().numpy())
+            # plt.imshow(x[0].permute(1, 2, 0).cpu().numpy())
+            # plt.savefig(save_path / "input.png")
+            # plt.close()
+            ax = visualize_from_torch(x[0], labels[0])
             plt.savefig(save_path / "input.png")
-            plt.close()
 
 
     return total_loss / len(loader), total_iou / len(loader)
