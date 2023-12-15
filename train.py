@@ -14,7 +14,7 @@ import argparse
 import tqdm
 import wandb
 import os
-os.system("taskset -c -p 0-31 %d" % os.getpid())
+
 
 def split_dataset(img_mask_pairs, config):
     train_count = int(len(img_mask_pairs) * config["train_size"])
@@ -58,14 +58,14 @@ def save_and_plot_record_tensor(record, name, train_record_path, config, epoch=-
     np.savetxt(train_record_path / (name + "_record.csv"),
                record.cpu().numpy(), header=header, delimiter=",")
     #  Plot the loss
-    plt.plot(record[:epoch+1, 0].cpu().numpy())
+    plt.plot(record[:epoch + 1, 0].cpu().numpy())
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.savefig(train_record_path / (name + "_loss.png"))
     plt.close()
     #  Plot the IoU per class
     for i in range(config["num_classes"]):
-        plt.plot(record[:epoch+1, i+1].cpu().numpy(), label=f"Class {i}")
+        plt.plot(record[:epoch + 1, i + 1].cpu().numpy(), label=f"Class {i}")
     plt.xlabel("Epoch")
     plt.ylabel("IoU")
     plt.legend()
@@ -170,9 +170,9 @@ def main(config):
 
     # Create the record tensors
     train_record = torch.zeros(
-        (config["num_epochs"], 1+config["num_classes"]), device=device)
+        (config["num_epochs"], 1 + config["num_classes"]), device=device)
     val_record = torch.zeros(
-        size=(config["num_epochs"], 1+config["num_classes"]), device=device)
+        size=(config["num_epochs"], 1 + config["num_classes"]), device=device)
 
     #  Start training
     for e in range(config["num_epochs"]):
@@ -264,7 +264,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", type=str, default=None,
                         help="Name of the run for wandb")
+    parser.add_argument("--cores", type=int, default=64)
     args = parser.parse_args()
     if args.name:
         _config["wandb_name"] = args.name
+    os.system(f"taskset -c -p 0-{args.cores-1} {os.getpid()}")
     main(_config)
