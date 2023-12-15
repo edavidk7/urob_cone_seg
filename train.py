@@ -94,7 +94,7 @@ def evaluate(model, loader, device, loss_fn, config, bar=None, save_path=None):
             # plt.imshow(x[0].permute(1, 2, 0).cpu().numpy())
             # plt.savefig(save_path / "input.png")
             # plt.close()
-            ax = visualize_from_torch(x[0], labels[0])
+            ax = visualize_from_torch(x[0].cpu(), labels[0].cpu())
             plt.savefig(save_path / "input.png")
 
 
