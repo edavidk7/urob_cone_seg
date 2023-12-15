@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
+from . import N_CLASSES
+from .transforms import Normalize
 import torch
 import tqdm
 
-# Class IDs to colors
+# Class IDs to RGB colors
 classid_to_color = {
     0: (20, 20, 20),
     1: (252, 132, 3),
@@ -24,34 +26,57 @@ classname_to_classid = {
     'seg_unknown_cone': 5
 }
 
-N_CLASSES = len(classid_to_color)
 
-
-def visualize_from_torch(img, mask, dpi=200, figsize=(15, 7), ax=None, denorm=True, show=True):
-    img = img.squeeze().permute(1, 2, 0).numpy()
-    mask = mask.squeeze().permute(1, 2, 0).numpy()
-    mask = np.argmax(mask, axis=-1)
-    mask_img = np.zeros((*mask.shape, 3), dtype=np.uint8)
+def mask_tensor_to_rgb(mask: torch.Tensor):
+    """Convert a mask (torch tensor of dim [C, H, W]) containing class indices to an RGB image of shape [H, W, 3]"""
+    _mask = mask.numpy()
+    _mask = np.argmax(_mask, axis=0)
+    mask_img = np.zeros((*_mask.shape, 3), dtype=np.uint8)
     for class_id, color in classid_to_color.items():
-        mask_img[mask == class_id] = color
+        mask_img[_mask == class_id] = color
+    return mask_img
+
+
+def image_tensor_to_rgb(img: torch.Tensor, denorm=True):
+    """Convert a torch tensor of shape [C, H, W] to an RGB image of shape [H, W, 3]"""
+    _img = img.squeeze().permute(1, 2, 0).numpy()
     if denorm:
-        img = (img * 127.5 + 127.5).astype(np.uint8)
+        _img = Normalize.denorm(_img)
+    return _img
+
+
+def blend_from_tensors(img: torch.Tensor, mask: torch.Tensor, denorm=True, alpha=0.5):
+    """Blend image tensor and mask tensor to a single RGB image (np.ndarray of shape [H, W, 3])"""
+    _img = image_tensor_to_rgb(img, denorm=denorm)
+    _mask = mask_tensor_to_rgb(mask)
+    return (alpha * _img + (1 - alpha) * _mask).astype(np.uint8)
+
+
+def blend_from_rgb(img: np.ndarray, mask: np.ndarray, alpha=0.5):
+    """Blend numpy RGB image and numpy RGB mask to a single RGB image (np.ndarray of shape [H, W, 3])"""
+    return (alpha * img + (1 - alpha) * mask).astype(np.uint8)
+
+
+def visualize_mask_img_pair_from_tensor(img: torch.Tensor, mask: torch.Tensor, denorm=True, blend=False, ax=None, show=False, figsize=(15, 7), dpi=200, alpha=0.5):
+    _img = image_tensor_to_rgb(img, denorm=denorm)
+    _mask = mask_tensor_to_rgb(mask)
     if ax is None:
-        fig, ax = plt.subplots(1, 2, figsize=figsize, dpi=dpi)
-    ax[0].imshow(img)
-    ax[0].set_title("Image")
+        fig, ax = plt.subplots(1, 3 if blend else 2, figsize=figsize, dpi=dpi)
+    else:
+        assert len(ax) == 3 if blend else 2, "Number of axes must be 3 if blend is True, else 2"
+    ax[0].imshow(_img)
     ax[0].axis("off")
-    ax[1].imshow(mask_img)
-    ax[1].set_title("Mask")
+    ax[0].set_title("Image")
+    ax[1].imshow(_mask)
     ax[1].axis("off")
+    ax[1].set_title("Mask")
+    if blend:
+        ax[2].imshow(blend_from_rgb(_img, _mask, alpha=alpha))
+        ax[2].axis("off")
+        ax[2].set_title("Blend")
     if show:
         plt.show()
     return ax
-
-
-def blend_from_torch(img, mask):
-    """Blend image and mask to visualize the segmentation (returns np array)"""
-    pass
 
 
 def segmask_iou(pred, target, smooth=1e-5):

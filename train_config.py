@@ -33,7 +33,7 @@ config = {
     "model_kwargs": {"num_classes": 6, "num_filters": 128, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
-    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.005},
+    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.025},
     # Loss setup
     "loss_fn": nn.CrossEntropyLoss,
     "loss_kwargs": {"reduction": "none"},
@@ -50,12 +50,11 @@ config = {
     "maskdir": "masks",
     "num_epochs": 10,
     "device": "mps",
-    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": True, "num_workers": 4, "batch_size": 2},
-    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": False, "shuffle": False,  "num_workers": 4, "batch_size": 2},
+    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": True, "num_workers": 2, "batch_size": 2},
+    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": False, "num_workers": 2, "batch_size": 2},
     "dataparallel": True,
     # Logging and evaluation setup
     "save_path": "./train_results",
-    "visualize_random_val_batch": True,
     "test_best": True,
     # wandb config
     "wandb_project": "fsoco-segmentation",
