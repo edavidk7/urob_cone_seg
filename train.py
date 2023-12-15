@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from copy import deepcopy
 import torch
 import torch.nn as nn
@@ -13,10 +12,10 @@ import gc
 import argparse
 import tqdm
 # import wandb
-plt.rcParams["backend"] = "Agg"
-
+# plt.rcParams["backend"] = "Agg"
 import matplotlib
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 def split_dataset(img_mask_pairs, config):
     train_count = int(len(img_mask_pairs) * config["train_size"])
