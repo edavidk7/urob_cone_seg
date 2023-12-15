@@ -86,9 +86,10 @@ def evaluate(model, loader, device, loss_fn, config, bar=None, save_path=None):
 
         if save_path is not None:
             save_path.mkdir(parents=True, exist_ok=True)
-            plt.figure(figsize=(10, 10))
+            # plt.figure(figsize=(10, 10))
             plt.imshow(x[0].permute(1, 2, 0).cpu().numpy())
             plt.savefig(save_path / "input.png")
+            plt.close()
 
 
     return total_loss / len(loader), total_iou / len(loader)
