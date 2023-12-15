@@ -104,9 +104,9 @@ def main(config):
     eval_T = config["eval_transforms"]
 
     # Datasets
-    train_dataset = ConeSegmentationDataset(train_pairs, train_T)
-    val_dataset = ConeSegmentationDataset(val_pairs, eval_T)
-    test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
+    train_dataset = ConeSegmentationDataset(train_pairs[:10], train_T)
+    val_dataset = ConeSegmentationDataset(val_pairs[:10], eval_T)
+    test_dataset = ConeSegmentationDataset(test_pairs[:10], eval_T)
 
     # Dataloaders
     train_loader = DataLoader(train_dataset, **config["train_loader_kwargs"])
