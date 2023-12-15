@@ -49,21 +49,23 @@ def visualize_batch(x, labels, output, loss, iou):
     pass
 
 
-def save_and_plot_record_tensor(record, name, train_record_path, config):
+def save_and_plot_record_tensor(record, name, train_record_path, config, epoch=-1):
+    if epoch == -1:
+        epoch = config["num_epochs"]
     #  Save to csv
     header = "loss," + \
         ",".join([f"iou_{i}" for i in range(config["num_classes"])])
     np.savetxt(train_record_path / (name + "_record.csv"),
                record.cpu().numpy(), header=header, delimiter=",")
     #  Plot the loss
-    plt.plot(record[:, 0].cpu().numpy())
+    plt.plot(record[:epoch+1, 0].cpu().numpy())
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.savefig(train_record_path / (name + "_loss.png"))
     plt.close()
     #  Plot the IoU per class
     for i in range(config["num_classes"]):
-        plt.plot(record[:, i+1].cpu().numpy(), label=f"Class {i}")
+        plt.plot(record[:epoch+1, i+1].cpu().numpy(), label=f"Class {i}")
     plt.xlabel("Epoch")
     plt.ylabel("IoU")
     plt.legend()
@@ -236,13 +238,14 @@ def main(config):
             best_average_iou = avg_eval_iou
             torch.save(best_weights, weights_path / "best_weights.pt")
 
+        #  Save the records and plot them
+        save_and_plot_record_tensor(
+            train_record, "train", train_record_path, config, epoch=e)
+        save_and_plot_record_tensor(
+            val_record, "val", train_record_path, config, epoch=e)
+
         if config["manual_gc"]:
             gc.collect()
-
-    #  Save the records and plot them
-    save_and_plot_record_tensor(
-        train_record, "train", train_record_path, config)
-    save_and_plot_record_tensor(val_record, "val", train_record_path, config)
 
     #  Test the best weights
     print(f"Best average IoU: {class_iou_to_str(best_average_iou)}")
