@@ -15,6 +15,9 @@ import tqdm
 import wandb
 plt.rcParams["backend"] = "Agg"
 
+import matplotlib
+matplotlib.use('Agg')
+
 def split_dataset(img_mask_pairs, config):
     train_count = int(len(img_mask_pairs) * config["train_size"])
     val_count = int(len(img_mask_pairs) * config["val_size"])
