@@ -182,23 +182,19 @@ def main(config):
         # Iterate over the training batches
 
         for x, labels in train_loader:
-            try:
-                optimizer.zero_grad()
-                x = x.to(device)
-                labels = labels.to(device)
-                output = model(x)
-                loss = criterion(output, labels)
-                total_loss += loss.mean().item()
-                loss.mean().backward()
-                optimizer.step()
-                batch_iou = segmask_iou(output, labels).mean(dim=0)
-                total_iou += batch_iou
-                train_bar.update()
-                train_bar.set_postfix(phase="train",
-                                      loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
-            except Exception as ex:
-                Warning(f"Exception: {ex}")
-                continue
+            optimizer.zero_grad()
+            x = x.to(device)
+            labels = labels.to(device)
+            output = model(x)
+            loss = criterion(output, labels)
+            total_loss += loss.mean().item()
+            loss.mean().backward()
+            optimizer.step()
+            batch_iou = segmask_iou(output, labels).mean(dim=0)
+            total_iou += batch_iou
+            train_bar.update()
+            train_bar.set_postfix(phase="train",
+                                  loss=f"{loss.mean().item():.4f}", iou=class_iou_to_str(batch_iou))
 
         avg_loss = total_loss / len(train_loader)
         total_iou = total_iou / len(train_loader)
