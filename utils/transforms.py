@@ -1,6 +1,6 @@
 from torchvision import transforms
 import torch
-from utils import N_CLASSES
+from . import N_CLASSES
 
 
 class BaseTransform(object):
@@ -33,6 +33,10 @@ class Normalize(BaseTransform):
     def __call__(self, tup):
         img_tensor, mask_tensor = tup
         return (img_tensor - self.mean) / self.std, mask_tensor
+
+    @staticmethod
+    def denorm(img_tensor, mean=127.5, std=127.5):
+        return img_tensor * std + mean
 
 
 class ResizeWithMask(BaseTransform):
@@ -107,7 +111,7 @@ class ClasswiseColorJitter(BaseTransform):
         assert all([0 <= k < N_CLASSES
                    for k in class_transform_params.keys()])
         self.class_transforms = {
-            k:  transforms.ColorJitter(**v) for k, v in class_transform_params.items()
+            k: transforms.ColorJitter(**v) for k, v in class_transform_params.items()
         }
 
     def __call__(self, tup):
