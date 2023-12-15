@@ -13,7 +13,8 @@ import gc
 import argparse
 import tqdm
 import wandb
-
+import os
+os.system("taskset -c -p 0-31 %d" % os.getpid())
 
 def split_dataset(img_mask_pairs, config):
     train_count = int(len(img_mask_pairs) * config["train_size"])

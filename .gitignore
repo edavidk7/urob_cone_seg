@@ -168,3 +168,4 @@ fsoco_segmentation*
 train_results/*
 scratch.ipynb
 wandb
+modules.sh
