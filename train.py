@@ -97,7 +97,7 @@ def main(config):
 
     img_mask_pairs = find_mask_img_pairs(config["data_path"], config["imdir"], config["maskdir"])
 
-    train_pairs, val_pairs, test_pairs = split_dataset(img_mask_pairs, config)
+    train_pairs, val_pairs, test_pairs = split_dataset(img_mask_pairs[:30], config)
 
     # Define the transforms
     train_T = config["train_transforms"]
@@ -105,9 +105,9 @@ def main(config):
 
     # Datasets
     print(type(train_pairs))
-    train_dataset = ConeSegmentationDataset(train_pairs[:10], train_T)
-    val_dataset = ConeSegmentationDataset(val_pairs[:10], eval_T)
-    test_dataset = ConeSegmentationDataset(test_pairs[:10], eval_T)
+    train_dataset = ConeSegmentationDataset(train_pairs, train_T)
+    val_dataset = ConeSegmentationDataset(val_pairs, eval_T)
+    test_dataset = ConeSegmentationDataset(test_pairs, eval_T)
 
     # Dataloaders
     train_loader = DataLoader(train_dataset, **config["train_loader_kwargs"])
