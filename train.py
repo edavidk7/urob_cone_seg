@@ -12,7 +12,7 @@ from datetime import datetime
 import gc
 import argparse
 import tqdm
-import wandb
+# import wandb
 plt.rcParams["backend"] = "Agg"
 
 import matplotlib
@@ -90,6 +90,7 @@ def evaluate(model, loader, device, loss_fn, config, bar=None, save_path=None):
         if save_path is not None:
             save_path.mkdir(parents=True, exist_ok=True)
             # plt.figure(figsize=(10, 10))
+            print("backend: ", matplotlib.get_backend())
             plt.imshow(x[0].permute(1, 2, 0).cpu().numpy())
             plt.savefig(save_path / "input.png")
             plt.close()
@@ -155,7 +156,7 @@ def main(config):
     train_record_path = create_train_record(config)
 
     # Initialize wandb
-    wandb_init(config)
+    # wandb_init(config)
 
     # Training loop
     model.train()
@@ -220,12 +221,12 @@ def main(config):
         tqdm.tqdm.write(f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
         tqdm.tqdm.write(f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
 
-        wandb.log({
-            "trn_loss": avg_loss,
-            "tst_loss": avg_eval_loss,
-            **class_iou_to_dict(avg_eval_iou, prefix="tst"),
-            **class_iou_to_dict(total_iou, prefix="trn")
-        })
+        # wandb.log({
+            # "trn_loss": avg_loss,
+            # "tst_loss": avg_eval_loss,
+            # **class_iou_to_dict(avg_eval_iou, prefix="tst"),
+            # **class_iou_to_dict(total_iou, prefix="trn")
+        # })
 
         #  Save the best weights
         if avg_eval_loss < best_loss:
