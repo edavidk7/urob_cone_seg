@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from copy import deepcopy
 import torch
 import torch.nn as nn
@@ -14,17 +13,15 @@ import argparse
 import tqdm
 import wandb
 
-# Matplotlib setup
-plt.style.use('ggplot')
-plt.rcParams["backend"] = "Agg"
-
+import matplotlib # import matplotlib in the correct order so that the backend change takes place
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 def split_dataset(img_mask_pairs, config):
     train_count = int(len(img_mask_pairs) * config["train_size"])
     val_count = int(len(img_mask_pairs) * config["val_size"])
     test_count = len(img_mask_pairs) - train_count - val_count
-    return torch.utils.data.random_split(
-        img_mask_pairs, [train_count, val_count, test_count])
+    return torch.utils.data.random_split(img_mask_pairs, [train_count, val_count, test_count])
 
 
 def create_train_record(config):
@@ -152,8 +149,7 @@ def evaluate(model, loader, device, loss_fn, config, bar=None, visualize_mode=No
 
 
 def wandb_init(config):
-    wandb.init(project=config["wandb_project"], config=config,
-               name=config["wandb_name"] if "wandb_name" in config else None)
+    wandb.init(project=config["wandb_project"], config=config, name=config["wandb_name"] if "wandb_name" in config else None)
 
 
 def main(config):
@@ -161,8 +157,7 @@ def main(config):
     torch.manual_seed(config["seed"])
     np.random.seed(config["seed"])
 
-    img_mask_pairs = find_mask_img_pairs(
-        config["data_path"], config["imdir"], config["maskdir"])
+    img_mask_pairs = find_mask_img_pairs(config["data_path"], config["imdir"], config["maskdir"])
 
     train_pairs, val_pairs, test_pairs = split_dataset(img_mask_pairs, config)
 
@@ -190,8 +185,7 @@ def main(config):
         model = nn.DataParallel(model)
 
     #  Setup the optimizer
-    optimizer = config["optim_type"](
-        model.parameters(), **config["optim_kwargs"])
+    optimizer = config["optim_type"](model.parameters(), **config["optim_kwargs"])
 
     #  Setup the loss
     if config["use_weighted_loss"]:
@@ -215,8 +209,7 @@ def main(config):
     best_epoch = 0
 
     #  Setup the progress bars
-    train_bar = tqdm.tqdm(range(
-        config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
+    train_bar = tqdm.tqdm(range(config["num_epochs"] * (len(train_loader) + len(val_loader))), desc="Epochs")
 
     #  Create the weights directory
     epochs_path = train_record_path / "epochs"
@@ -226,10 +219,8 @@ def main(config):
     best_result_path.mkdir(parents=True, exist_ok=True)
 
     # Create the record tensors
-    train_record = torch.zeros(
-        (config["num_epochs"], 1 + config["num_classes"]), device=device)
-    val_record = torch.zeros(
-        size=(config["num_epochs"], 1 + config["num_classes"]), device=device)
+    train_record = torch.zeros((config["num_epochs"], 1 + config["num_classes"]), device=device)
+    val_record = torch.zeros(size=(config["num_epochs"], 1 + config["num_classes"]), device=device)
 
     #  Start training
     for e in range(config["num_epochs"]):
@@ -278,10 +269,8 @@ def main(config):
 
         # Update the writeout and save the last weights
         tqdm.tqdm.write(f"Epoch {e}:")
-        tqdm.tqdm.write(
-            f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
-        tqdm.tqdm.write(
-            f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
+        tqdm.tqdm.write(f"Train: avg. loss: {avg_loss:.4f}, avg. per-class IoU: {class_iou_to_str(total_iou)}")
+        tqdm.tqdm.write(f"Val: avg. loss: {avg_eval_loss:.4f}, avg. per-class IoU: {class_iou_to_str(avg_eval_iou)}")
 
         #  Log to wandb
         wandb.log({
@@ -302,10 +291,8 @@ def main(config):
             torch.save(best_weights, best_result_path / f"best_weights.pt")
 
         #  Save the records and plot them
-        save_and_plot_record_tensor(
-            train_record, "train", train_record_path, config, epoch=e)
-        save_and_plot_record_tensor(
-            val_record, "val", train_record_path, config, epoch=e)
+        save_and_plot_record_tensor(train_record, "train", train_record_path, config, epoch=e)
+        save_and_plot_record_tensor(val_record, "val", train_record_path, config, epoch=e)
 
         if config["manual_gc"]:
             gc.collect()

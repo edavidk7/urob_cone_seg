@@ -11,10 +11,8 @@ except:
 
 class DatasetExplorer:
     def __init__(self) -> None:
-        self.img_mask_pairs = find_mask_img_pairs(
-            config["data_path"], config["imdir"], config["maskdir"])
-        self.dataset = ConeSegmentationDataset(
-            self.img_mask_pairs, Normalize())
+        self.img_mask_pairs = find_mask_img_pairs(config["data_path"], config["imdir"], config["maskdir"])
+        self.dataset = ConeSegmentationDataset(self.img_mask_pairs, Normalize())
         self.current_idx = 0
         self.fig, self.ax = plt.subplots(1, 2, figsize=(8, 3), dpi=150)
         self.fig.tight_layout()
