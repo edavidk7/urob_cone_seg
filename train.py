@@ -202,7 +202,6 @@ def main(config):
 
     # Initialize wandb
     wandb_init(config)
-    wandb.watch(model)
 
     # Training loop
     model.train()
