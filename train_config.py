@@ -19,9 +19,9 @@ train_T = transforms.Compose(
         Normalize(),
         RandomCropWithMask(size=(720, 1280), skip_smaller=True),
         RandomHorizontalFlipWithMask(0.5),
-        RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
-        RandomRotationWithMask(degrees=5),
-        ClasswiseColorJitter(class_color_jitter)
+        # RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
+        # RandomRotationWithMask(degrees=5),
+        # ClasswiseColorJitter(class_color_jitter)
     ])
 
 eval_T = transforms.Compose([
@@ -35,7 +35,7 @@ config = {
     "model_kwargs": {"num_classes": 6, "num_filters": 128, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
-    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.005},
+    "optim_kwargs": {"lr": 0.01, "weight_decay": 0.025},
     # Loss setup
     "loss_fn": nn.CrossEntropyLoss,
     "loss_kwargs": {"reduction": "none"},
@@ -57,7 +57,6 @@ config = {
     "dataparallel": True,
     # Logging and evaluation setup
     "save_path": "./train_results",
-    "visualize_random_val_batch": True,
     "test_best": True,
     # wandb config
     "wandb_project": "fsoco-segmentation",
