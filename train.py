@@ -13,9 +13,11 @@ import argparse
 import tqdm
 import wandb
 
-import matplotlib # import matplotlib in the correct order so that the backend change takes place
+import matplotlib  # import matplotlib in the correct order so that the backend change takes place
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+plt.style.use('ggplot')
+
 
 def split_dataset(img_mask_pairs, config):
     train_count = int(len(img_mask_pairs) * config["train_size"])
@@ -62,14 +64,14 @@ def visualize_batch(images, ground_truths, predictions, losses, ious, path, pref
             rgb_pred_mask = mask_tensor_to_rgb(predictions[idx])
             gt_blend = blend_from_rgb(rgb_image, rgb_gt_mask, alpha=alpha)
             pred_blend = blend_from_rgb(rgb_image, rgb_pred_mask, alpha=alpha)
-            gt_title = f"{prefix} - sample {idx} GT\nLoss: {losses[idx].item():.4f}\nIoU:\n{class_iou_to_str(ious[idx], add_newline=True)}"
+            gt_title = f"{prefix} - sample {idx} GT"
             pred_title = f"{prefix} - sample {idx} Pred\nLoss: {losses[idx].item():.4f}\nIoU:\n{class_iou_to_str(ious[idx], add_newline=True)}"
             ax[i, 2 * j].imshow(gt_blend)
             ax[i, 2 * j].axis("off")
-            ax[i, 2 * j].set_title(gt_title, fontsize=8)
+            ax[i, 2 * j].set_title(gt_title, fontsize=10)
             ax[i, 2 * j + 1].imshow(pred_blend)
             ax[i, 2 * j + 1].axis("off")
-            ax[i, 2 * j + 1].set_title(pred_title, fontsize=8)
+            ax[i, 2 * j + 1].set_title(pred_title, fontsize=10)
     plt.tight_layout()
     plt.savefig(path, bbox_inches='tight')
     plt.close()
@@ -138,7 +140,7 @@ def evaluate(model, loader, device, loss_fn, config, bar=None, visualize_mode=No
                     worst = (x, labels, output.cpu(), loss.mean(dim=(1, 2)).cpu(), batch_iou.cpu())
                     worst_idx = i
             elif visualize_mode == "every" and visualize_path:
-                visualize_batch(x, labels, output.cpu(), loss.mean(dim=(1, 2)).cpu(), batch_iou.cpu(), visualize_path / f"eval_batch_{i}.png")
+                visualize_batch(x, labels, output.cpu(), loss.mean(dim=(1, 2)).cpu(), batch_iou.cpu(), visualize_path / f"eval_batch_{i}.png", prefix=f"Eval batch {i}")
             i += 1
 
         if visualize_mode == "best_worst" and visualize_path:
