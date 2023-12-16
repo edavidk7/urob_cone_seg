@@ -4,7 +4,7 @@ from torch.nn.functional import cross_entropy
 
 
 class FocalLoss(torch.nn.Module):
-    def __init__(self, gamma: float = 1, weight: Tensor = None):
+    def __init__(self, gamma: float = 1, weight: Tensor = None, reduction='mean'):
         super().__init__()
         self.gamma = gamma
         self.alpha = weight
@@ -13,7 +13,10 @@ class FocalLoss(torch.nn.Module):
         logp = -cross_entropy(input, target, reduction='none')
         if self.alpha is not None: logp *= torch.max(self.alpha.view(1, -1, 1, 1) * target, dim=1)[0]
         loss = -(1 - torch.exp(logp))**self.gamma * logp
-        return loss
+
+        if reduction == 'mean': return loss.mean()
+        elif reduction == 'sum': return loss.sum()
+        else: return loss
 
 if __name__ == "__main__":
     alpha = torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2])
