@@ -9,7 +9,6 @@ from torch.utils.data import DataLoader
 from utils import *
 from train_config import config as _config
 from datetime import datetime
-import gc
 import argparse
 import tqdm
 import wandb
@@ -118,8 +117,7 @@ def evaluate(model, loader, device, loss_fn, config, bar=None, visualize_mode=No
         best_loss, worst_loss = torch.inf, -torch.inf
         best, worst = None, None
         best_idx, worst_idx = -1, -1
-        i = 0
-        for x, labels in loader:
+        for i, (x, labels) in enumerate(loader):
             x_dev = x.to(device)
             labels_dev = labels.to(device)
             output = model(x_dev)
@@ -144,7 +142,6 @@ def evaluate(model, loader, device, loss_fn, config, bar=None, visualize_mode=No
                     worst_idx = i
             elif visualize_mode == "every" and visualize_path:
                 visualize_batch(x, labels, output.cpu(), loss.mean(dim=(1, 2)).cpu(), batch_iou.cpu(), visualize_path / f"eval_batch_{i}.png", prefix=f"Eval batch {i}")
-            i += 1
 
         if visualize_mode == "best_worst" and visualize_path:
             visualize_batch(*best, visualize_path / "best.png", prefix=f"Best batch ({best_idx})")
@@ -192,11 +189,14 @@ def main(config):
     #  Setup the optimizer
     optimizer = config["optim_type"](model.parameters(), **config["optim_kwargs"])
 
+    #  Setup the scheduler
+    scheduler = config["scheduler_type"](optimizer, **config["scheduler_kwargs"]) if config["scheduler_type"] else None
+
     #  Setup the loss
     if config["use_weighted_loss"]:
         info = analyze_dataset_split(train_pairs, distribution_mode="img")
         if config["use_weighted_loss"]:
-            config["loss_kwargs"]["weight"] = torch.sqrt(1 - info["class_distribution"]).to(device)
+            config["loss_kwargs"]["weight"] = config["loss_weight_fn"](info["class_distribution"]).to(device)
             print(f"Using class weights {config['loss_kwargs']['weight']} for loss")
     else:
         config["loss_kwargs"]["weight"] = None
@@ -290,7 +290,7 @@ def main(config):
             "worst_batch": wandb.Image(str(epoch_path / "worst.png")),
         })
 
-        #  Save the best weights
+        # Save the best weights
         if avg_eval_loss < best_loss:
             best_loss = avg_eval_loss
             best_weights = deepcopy(model.state_dict())
@@ -298,12 +298,16 @@ def main(config):
             best_average_iou = avg_eval_iou
             torch.save(best_weights, best_result_path / f"best_weights.pt")
 
+        # Update the scheduler (if any)
+        if scheduler:
+            if config["scheduler_requires_metric"]:
+                scheduler.step(avg_eval_loss)
+            else:
+                scheduler.step()
+
         #  Save the records and plot them
         save_and_plot_record_tensor(train_record, "train", train_record_path, config, epoch=e)
         save_and_plot_record_tensor(val_record, "val", train_record_path, config, epoch=e)
-
-        if config["manual_gc"]:
-            gc.collect()
 
     #  Test the best weights
     print(f"Best average IoU: {class_iou_to_str(best_average_iou)}")

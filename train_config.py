@@ -1,9 +1,10 @@
 from torchvision.transforms import Compose
 from utils.transforms import *
+from utils.losses import *
 from utils.tools import assert_torch_device
 from model import MobileV3Large, MobileV3Small
 from torch.optim import SGD, Adam, AdamW
-from torch import nn
+from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, ReduceLROnPlateau
 
 class_color_jitter = {
     0: {"hue": 0.5, "saturation": 0.5},
@@ -34,10 +35,15 @@ config = {
     # Optimizer setup
     "optim_type": Adam,
     "optim_kwargs": {"lr": 0.001, "weight_decay": 0.025},
+    # Scheduler setup
+    "scheduler_type": ReduceLROnPlateau,
+    "scheduler_kwargs": {"mode": "min", "factor": 0.5, "patience": 2, "verbose": True},
+    "scheduler_requires_metric": True,  # If true, scheduler will be called with "scheduler_metric" as argument
     # Loss setup
-    "loss_fn": nn.CrossEntropyLoss,
+    "loss_fn": CrossEntropyLoss,
     "loss_kwargs": {"reduction": "none"},
     "use_weighted_loss": True,  # Gets added to kwargs later
+    "loss_weight_fn": ClassDistrToWeight.sqrt_one_minus,
     # Data setup
     "num_classes": 6,
     "train_size": 0.7,
@@ -58,8 +64,6 @@ config = {
     "test_best": True,
     # wandb config
     "wandb_project": "fsoco-segmentation",
-    # GC
-    "manual_gc": False,
 }
 
 if not assert_torch_device(config["device"]):

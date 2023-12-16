@@ -25,7 +25,7 @@ class BaseTransform(object):
 
 class Normalize(BaseTransform):
 
-    MEAN = (131.2073, 149.7853, 145.0378)
+    MEAN = (131.2073, 149.7853, 145.0378)  # Values from the dataset generated from seed 42
     STD = (42.6210, 41.9638, 42.8229)
 
     def __init__(self, mean=None, std=None):
