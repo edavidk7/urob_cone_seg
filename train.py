@@ -196,7 +196,7 @@ def main(config):
     if config["use_weighted_loss"]:
         info = analyze_dataset_split(train_pairs, distribution_mode="img")
         if config["use_weighted_loss"]:
-            config["loss_kwargs"]["weight"] = 1. / (info["class_distribution"] * N_CLASSES).to(device)
+            config["loss_kwargs"]["weight"] = torch.sqrt(1 - info["class_distribution"]).to(device)
             print(f"Using class weights {config['loss_kwargs']['weight']} for loss")
     else:
         config["loss_kwargs"]["weight"] = None
