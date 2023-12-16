@@ -17,7 +17,7 @@ class_color_jitter = {
 train_T = transforms.Compose(
     [
         Normalize(),
-        RandomCropWithMask(size=(512, 512), skip_smaller=True),
+        RandomCropWithMask(size=(720, 1280), skip_smaller=True),
         RandomHorizontalFlipWithMask(0.5),
         # RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
         # RandomRotationWithMask(degrees=5),
@@ -31,8 +31,8 @@ eval_T = transforms.Compose([
 
 config = {
     # Model setup
-    "model_type": MobileV3Small,
-    "model_kwargs": {"num_classes": 6, "num_filters": 128, "use_aspp": True},
+    "model_type": MobileV3Large,
+    "model_kwargs": {"num_classes": 6, "num_filters": 192, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
     "optim_kwargs": {"lr": 0.001, "weight_decay": 0.025},
@@ -50,7 +50,7 @@ config = {
     "data_path": "fsoco_segmentation_processed",
     "imdir": "imgs",
     "maskdir": "masks",
-    "num_epochs": 10,
+    "num_epochs": 20,
     "device": "cuda",
     "train_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": True, "num_workers": 8, "batch_size": 16},
     "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": False,  "num_workers": 8, "batch_size": 16},
