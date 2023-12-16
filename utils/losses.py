@@ -9,14 +9,19 @@ class FocalLoss(torch.nn.Module):
         self.alpha = alpha
 
     def __call__(self, input, target):
-        if self.alpha is not None:
-            target = self.alpha.view(1, -1, 1, 1) * target
         logp = -cross_entropy(input, target, reduction='none')
         loss = -(1 - torch.exp(logp)) ** self.gamma * logp
+        if self.alpha is not None:
+            target = self.alpha.view(1, -1, 1, 1) * target
+            target_scales = torch.max(target, dim=1)[0]
+            loss = target_scales * loss
         return loss.mean()
 
 if __name__ == "__main__":
     pred = torch.randn(2, 5, 7, 12)
     target = torch.randint(size=(2, 5, 7, 12), low=0, high=5, dtype=torch.long).float()
-    focal_loss_fn = FocalLoss(alpha=torch.tensor([1.0, 1.0, 1.0, 1.0, 1.0]))
+    print(pred.shape, target.shape)
+    focal_loss_fn = FocalLoss()
+    print(focal_loss_fn(pred, target))
+    focal_loss_fn = FocalLoss(alpha=torch.tensor([0.2, 0.2, 0.2, 0.2, 0.2]))
     print(focal_loss_fn(pred, target))
