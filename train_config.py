@@ -33,11 +33,11 @@ config = {
     "model_kwargs": {"num_classes": 6, "num_filters": 128, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
-    "optim_kwargs": {"lr": 0.01, "weight_decay": 0.025},
+    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.025},
     # Loss setup
     "loss_fn": nn.CrossEntropyLoss,
     "loss_kwargs": {"reduction": "none"},
-    "use_weighted_loss": False,  # Gets added to kwargs later
+    "use_weighted_loss": True,  # Gets added to kwargs later
     # Data setup
     "num_classes": 6,
     "train_size": 0.7,

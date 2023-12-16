@@ -25,18 +25,29 @@ class BaseTransform(object):
 
 class Normalize(BaseTransform):
 
-    def __init__(self, mean=127.5, std=127.5):
-        super().__init__(mean=mean, std=std)
-        self.mean = mean
-        self.std = std
+    MEAN = (131.2073, 149.7853, 145.0378)
+    STD = (42.6210, 41.9638, 42.8229)
+
+    def __init__(self, mean=None, std=None):
+        if mean is None:
+            self.mean = self.MEAN
+        else:
+            self.mean = mean
+        if std is None:
+            self.std = self.STD
+        else:
+            self.std = std
+        super().__init__(mean=self.mean, std=self.std)
+        self.mean = torch.tensor(self.mean).reshape(3, 1, 1)
+        self.std = torch.tensor(self.std).reshape(3, 1, 1)
 
     def __call__(self, tup):
         img_tensor, mask_tensor = tup
         return (img_tensor - self.mean) / self.std, mask_tensor
 
     @staticmethod
-    def denorm(img_tensor, mean=127.5, std=127.5):
-        return img_tensor * std + mean
+    def denorm(img_tensor):
+        return (img_tensor * Normalize.STD) + Normalize.MEAN
 
 
 class ResizeWithMask(BaseTransform):

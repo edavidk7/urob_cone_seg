@@ -5,6 +5,7 @@ from . import N_CLASSES
 from .transforms import Normalize
 import torch
 import tqdm
+from .dataset import ConeSegmentationDataset
 
 # Class IDs to RGB colors
 classid_to_color = {
@@ -108,13 +109,36 @@ def class_mask_to_one_hot(mask, num_classes=N_CLASSES):
         torch.from_numpy(mask).long(), num_classes=num_classes).numpy().transpose(2, 0, 1)
 
 
-def determine_class_distribution(dataset):
-    class_counts = torch.zeros(N_CLASSES)
-    bar = tqdm.tqdm(dataset, desc="Determining class counts")
-    for _, mask in bar:
-        class_counts += mask.sum(dim=(1, 2))
-    class_counts /= class_counts.sum()
-    return class_counts.detach().numpy()
+def analyze_dataset_split(img_mask_pairs, distribution_mode="all"):
+    """Analyze the distribution of classes in a dataset split and the mean and std of the images
+    (channelwiese)"""
+    ds = ConeSegmentationDataset(img_mask_pairs, None)
+    class_counts = torch.zeros((len(ds), N_CLASSES))
+    img_mean = torch.zeros((len(ds), 3))
+    img_std = torch.zeros((len(ds), 3))
+    for i in tqdm.tqdm(range(len(ds)), desc="Analyzing dataset split"):
+        img, mask = ds[i]
+        # Get the class counts/fractions for each image
+        class_counts[i] = mask.sum(dim=(1, 2))
+        if distribution_mode == "img":
+            class_counts[i] /= mask.shape[1] * mask.shape[2]
+        # Analyze the image mean and std
+        img_mean[i] = img.mean(dim=(1, 2))
+        img_std[i] = img.std(dim=(1, 2))
+
+    img_mean = img_mean.mean(dim=0)
+    img_std = img_std.mean(dim=0)
+
+    if distribution_mode == "all":
+        class_counts = class_counts.sum(dim=0)
+        class_counts /= class_counts.sum()
+    elif distribution_mode == "img":
+        class_counts = class_counts.mean(dim=0)
+    return {
+        "class_distribution": class_counts,
+        "img_mean": img_mean,
+        "img_std": img_std
+    }
 
 
 def assert_torch_device(device_str):

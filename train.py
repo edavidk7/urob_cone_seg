@@ -6,6 +6,7 @@ import tqdm
 from pathlib import Path
 from utils import *
 from torch.utils.data import DataLoader
+from utils import *
 from train_config import config as _config
 from datetime import datetime
 import gc
@@ -17,6 +18,8 @@ import matplotlib  # import matplotlib in the correct order so that the backend 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.style.use('ggplot')
+
+torch.set_printoptions(precision=4, sci_mode=False)
 
 
 def split_dataset(img_mask_pairs, config):
@@ -191,7 +194,10 @@ def main(config):
 
     #  Setup the loss
     if config["use_weighted_loss"]:
-        pass
+        info = analyze_dataset_split(train_pairs, distribution_mode="img")
+        if config["use_weighted_loss"]:
+            config["loss_kwargs"]["weight"] = 1. / (info["class_distribution"] * N_CLASSES).to(device)
+            print(f"Using class weights {config['loss_kwargs']['weight']} for loss")
     else:
         config["loss_kwargs"]["weight"] = None
 
