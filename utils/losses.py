@@ -8,14 +8,15 @@ class FocalLoss(torch.nn.Module):
         super().__init__()
         self.gamma = gamma
         self.alpha = weight
+        self.reduction = reduction
 
     def __call__(self, input, target):
         logp = -cross_entropy(input, target, reduction='none')
         if self.alpha is not None: logp *= torch.max(self.alpha.view(1, -1, 1, 1) * target, dim=1)[0]
         loss = -(1 - torch.exp(logp))**self.gamma * logp
 
-        if reduction == 'mean': return loss.mean()
-        elif reduction == 'sum': return loss.sum()
+        if self.reduction == 'mean': return loss.mean()
+        elif self.reduction == 'sum': return loss.sum()
         else: return loss
 
 if __name__ == "__main__":
