@@ -165,6 +165,6 @@ cython_debug/
 .LSOverride
 .DS_store
 fsoco_segmentation*
-train_results/*
+*_results/*
 scratch.ipynb
 wandb
