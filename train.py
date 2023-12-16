@@ -12,6 +12,7 @@ import gc
 import argparse
 import tqdm
 import wandb
+import os
 
 import matplotlib  # import matplotlib in the correct order so that the backend change takes place
 matplotlib.use('Agg')
