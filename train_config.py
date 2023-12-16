@@ -17,7 +17,7 @@ class_color_jitter = {
 train_T = transforms.Compose(
     [
         Normalize(),
-        RandomCropWithMask(size=(720, 1280), skip_smaller=True),
+        RandomCropWithMask(size=(512, 512), skip_smaller=True),
         RandomHorizontalFlipWithMask(0.5),
         # RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
         # RandomRotationWithMask(degrees=5),
