@@ -28,11 +28,11 @@ if __name__ == "__main__":
 
     ce_loss_fn = torch.nn.CrossEntropyLoss(reduction='mean')
     print("CE default:", ce_loss_fn(pred, target))
-    ce_loss_weighted_fn = torch.nn.CrossEntropyLoss(weight=alpha+0.1, reduction='mean')
+    ce_loss_weighted_fn = torch.nn.CrossEntropyLoss(weight=alpha, reduction='mean')
     print("CE weighted:", ce_loss_weighted_fn(pred, target))
     focal_loss_fn = FocalLoss()
     print("Focal default:", focal_loss_fn(pred, target).mean())
-    focal_loss_fn = FocalLoss(gamma=0., weight=alpha+0.1)
+    focal_loss_fn = FocalLoss(gamma=0., weight=alpha)
     print("Focal weighted:", focal_loss_fn(pred, target).mean())
     focal_no_gamma_loss_fn = FocalLoss(gamma=0)
     print("Focal loss without gamma is the same as CE loss:", torch.allclose(focal_no_gamma_loss_fn(pred, target).mean(), ce_loss_fn(pred, target)))
