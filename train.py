@@ -48,12 +48,12 @@ def class_iou_to_dict(iou, prefix):
     return {f"{prefix}_iou/{i}": iou[i] for i in range(len(iou))}
 
 
-def visualize_batch(images, ground_truths, predictions, losses, ious, path, prefix="", dpi=300, alpha=0.3, imgs_per_row=2):
+def visualize_batch(images, ground_truths, predictions, losses, ious, path, prefix="", dpi=300, alpha=0.3, figimgsize=4, imgs_per_row=2):
     if not path.parent.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
     rowcount = np.ceil(images.shape[0] / imgs_per_row).astype(int)
     colcount = 2 * imgs_per_row
-    fig, ax = plt.subplots(rowcount, colcount, figsize=(colcount * 3, rowcount * 3), dpi=dpi, squeeze=False)
+    fig, ax = plt.subplots(rowcount, colcount, figsize=(colcount * figimgsize, rowcount * figimgsize), dpi=dpi, squeeze=False)
     for i in range(rowcount):
         for j in range(imgs_per_row):
             idx = i * imgs_per_row + j
@@ -72,7 +72,7 @@ def visualize_batch(images, ground_truths, predictions, losses, ious, path, pref
             ax[i, 2 * j + 1].imshow(pred_blend)
             ax[i, 2 * j + 1].axis("off")
             ax[i, 2 * j + 1].set_title(pred_title, fontsize=10)
-    plt.tight_layout()
+    plt.tight_layout(pad=1.0)
     plt.savefig(path, bbox_inches='tight')
     plt.close()
 
@@ -202,6 +202,7 @@ def main(config):
 
     # Initialize wandb
     wandb_init(config)
+    wandb.watch(model)
 
     # Training loop
     model.train()
