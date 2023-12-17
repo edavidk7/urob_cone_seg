@@ -18,17 +18,18 @@ class_color_jitter = {
 train_T = transforms.Compose(
     [
         Normalize(),
-        RandomCropWithMask(size=(720, 1280), skip_smaller=True),
+        # RandomCropWithMask(size=(720, 1280), skip_smaller=True),
+        ResizeWithMask(size=(720, 1280), antialias=True),
         RandomHorizontalFlipWithMask(0.5),
-        # RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
-        # RandomRotationWithMask(degrees=5),
+        RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
+        RandomRotationWithMask(degrees=5),
         # ClasswiseColorJitter(class_color_jitter)
     ])
 
 eval_T = transforms.Compose([
-    Normalize(), 
+    Normalize(),
     ResizeWithMask(size=(720, 1280), antialias=True)
-        ])
+])
 
 config = {
     # Model setup
@@ -59,7 +60,7 @@ config = {
     "num_epochs": 20,
     "device": "cuda",
     "train_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": True, "num_workers": 8, "batch_size": 16},
-    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": False,  "num_workers": 8, "batch_size": 16},
+    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": False, "num_workers": 8, "batch_size": 16},
     "dataparallel": True,
     # Logging and evaluation setup
     "save_path": "./train_results",
