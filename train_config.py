@@ -33,11 +33,11 @@ eval_T = transforms.Compose([
 
 config = {
     # Model setup
-    "model_type": MobileV3Large,
-    "model_kwargs": {"num_classes": 6, "num_filters": 192, "use_aspp": True},
+    "model_type": MobileV3Small,
+    "model_kwargs": {"num_classes": 6, "num_filters": 256, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
-    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.025},
+    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.005},
     # Scheduler setup
     "scheduler_type": ReduceLROnPlateau,
     "scheduler_kwargs": {"mode": "min", "factor": 0.5, "patience": 2, "verbose": True},
@@ -45,7 +45,7 @@ config = {
     # Loss setup
     "loss_fn": CrossEntropyLoss,
     "loss_kwargs": {"reduction": "none"},
-    "use_weighted_loss": True,  # Gets added to kwargs later
+    "use_weighted_loss": False,  # Gets added to kwargs later
     "loss_weight_fn": ClassDistrToWeight.sqrt_one_minus,
     # Data setup
     "num_classes": 6,
