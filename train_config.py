@@ -40,7 +40,7 @@ config = {
     # Scheduler setup
     "scheduler_type": ReduceLROnPlateau,
     "scheduler_kwargs": {"mode": "min", "factor": 0.5, "patience": 2, "verbose": True},
-    "scheduler_requires_metric": True,  # If true, scheduler will be called with "scheduler_metric" as argument
+    "scheduler_requires_metric": True,  # If true, scheduler will be called with avg validation loss
     # Loss setup
     "loss_fn": CrossEntropyLoss,
     "loss_kwargs": {"reduction": "none"},
