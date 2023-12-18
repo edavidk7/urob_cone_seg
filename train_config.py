@@ -7,28 +7,26 @@ from torch.optim import SGD, Adam, AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, ReduceLROnPlateau
 
 class_color_jitter = {
-    0: {"hue": 0.5, "saturation": 0.5},
-    1: {"hue": 0.5, "saturation": 0.8},
-    2: {"hue": 0.5, "saturation": 0.8},
-    3: {"hue": 0.5, "saturation": 0.8},
-    4: {"hue": 0.5, "saturation": 0.8},
-    5: {"hue": 0.5, "saturation": 0.8},
+    0: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
+    1: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
+    2: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
+    3: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
+    4: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
+    5: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
 }
 
 train_T = transforms.Compose(
     [
-        Normalize(),
-        # RandomCropWithMask(size=(720, 1280), skip_smaller=True),
-        ResizeWithMask(size=(720, 1280), antialias=True),
+        ClasswiseColorJitter(class_color_jitter),
         RandomHorizontalFlipWithMask(0.5),
-        RandomAffineWithMask(degrees=10, translate=(0.01, 0.01)),
-        RandomRotationWithMask(degrees=5),
-        # ClasswiseColorJitter(class_color_jitter)
+        RandomAffineWithMask(degrees=15, translate=(0.1, 0.1)),
+        ResizeWithMask(size=(900, 1500), antialias=True),
+        Normalize(),
     ])
 
 eval_T = transforms.Compose([
+    ResizeWithMask(size=(720, 1280), antialias=True),
     Normalize(),
-    ResizeWithMask(size=(720, 1280), antialias=True)
 ])
 
 config = {
