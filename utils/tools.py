@@ -43,7 +43,7 @@ def image_tensor_to_rgb(img: torch.Tensor, denorm=True):
     _img = img.squeeze().permute(1, 2, 0).numpy()
     if denorm:
         _img = Normalize.denorm(_img)
-    return _img
+    return _img.astype(np.uint8)
 
 
 def blend_from_tensors(img: torch.Tensor, mask: torch.Tensor, denorm=True, alpha=0.5):
