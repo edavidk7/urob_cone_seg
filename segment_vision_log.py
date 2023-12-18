@@ -30,13 +30,19 @@ def segment_vision_log(path, output):
     vid = video_iterator(path)
     with torch.no_grad():
         model = setup_model()
-        for frame in vid:
+        for i, frame in enumerate(vid):
+            print("frame: ", i)
+
+            if i < 500:
+                continue
+
             image_tensor = torch.from_numpy(frame).permute(2, 0, 1).float()
             image_tensor = image_tensor[[2, 1, 0]]
             empty_mask = torch.zeros((6,image_tensor.shape[1], image_tensor.shape[2]))
             image_tensor = eval_T((image_tensor, empty_mask))[0]
             preds = model(image_tensor.unsqueeze(0))[0]
             mask = mask_tensor_to_rgb(preds)
+            cv2.imshow("frame",frame)
             cv2.imshow("mask",mask)
             cv2.waitKey(1)
             print("processing")
