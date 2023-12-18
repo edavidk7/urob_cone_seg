@@ -35,7 +35,7 @@ config = {
     "model_kwargs": {"num_classes": 6, "num_filters": 256, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
-    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.005},
+    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.001},
     # Scheduler setup
     "scheduler_type": ReduceLROnPlateau,
     "scheduler_kwargs": {"mode": "min", "factor": 0.5, "patience": 2, "verbose": True},
@@ -55,7 +55,7 @@ config = {
     "data_path": "fsoco_segmentation_processed",
     "imdir": "imgs",
     "maskdir": "masks",
-    "num_epochs": 20,
+    "num_epochs": 40,
     "device": "cuda",
     "train_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": True, "num_workers": 8, "batch_size": 16},
     "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": False, "num_workers": 8, "batch_size": 16},
