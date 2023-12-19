@@ -168,3 +168,4 @@ fsoco_segmentation*
 *_results/*
 scratch.ipynb
 wandb
+*.key
