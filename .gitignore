@@ -169,3 +169,4 @@ fsoco_segmentation*
 scratch.ipynb
 wandb
 *.key
+vision_for_testing
