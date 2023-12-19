@@ -9,4 +9,4 @@ module restore cone_seg_modules
 wandb online
 cd /mnt/personal/korcadav/eforce_cone_seg
 
-python train.py --name RCI_256_Small_Mid_Transforms --rci
+python train.py --name RCI_256_Small_NoDecay_MoreAggressiveTransforms --rci

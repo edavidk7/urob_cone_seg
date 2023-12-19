@@ -19,7 +19,7 @@ train_T = transforms.Compose(
     [
         ClasswiseColorJitter(class_color_jitter),
         RandomHorizontalFlipWithMask(0.5),
-        RandomAffineWithMask(degrees=15, translate=(0.05, 0.05)),
+        RandomAffineWithMask(degrees=15, translate=(0.08, 0.08)),
         ResizeWithMask(size=(720, 1280), antialias=True),
         Normalize(),
     ])
@@ -35,7 +35,7 @@ config = {
     "model_kwargs": {"num_classes": 6, "num_filters": 256, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
-    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.0000},
+    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.000},
     # Scheduler setup
     "scheduler_type": ReduceLROnPlateau,
     "scheduler_kwargs": {"mode": "min", "factor": 0.5, "patience": 2, "verbose": True},

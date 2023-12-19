@@ -170,3 +170,4 @@ fsoco_segmentation*
 scratch.ipynb
 wandb
 modules.sh
+*.out
