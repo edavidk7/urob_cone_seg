@@ -327,9 +327,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", type=str, default=None,
                         help="Name of the run for wandb")
-    parser.add_argument("--cores", type=int, default=64)
+    parser.add_argument("--rci", action="store_true", default=False)
     args = parser.parse_args()
     if args.name:
         _config["wandb_name"] = args.name
-    os.system(f"taskset -c -p 0-{args.cores-1} {os.getpid()}")
+    if args.rci:
+        print("Originally scheduled cores:", os.sched_getaffinity(0))
+        os.system(f"taskset -p FFFFFFFF {os.getpid()}")
+        print("Now using cores:", os.sched_getaffinity(0))
     main(_config)

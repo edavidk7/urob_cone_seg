@@ -7,7 +7,7 @@ from torch.optim import SGD, Adam, AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, ReduceLROnPlateau
 
 class_color_jitter = {
-    0: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
+    0: {"hue": (-0.1, 0.1), "saturation": (0.5, 1.5), "brightness": (0.8, 1.2)},
     1: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
     2: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
     3: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
@@ -19,8 +19,8 @@ train_T = transforms.Compose(
     [
         ClasswiseColorJitter(class_color_jitter),
         RandomHorizontalFlipWithMask(0.5),
-        RandomAffineWithMask(degrees=15, translate=(0.1, 0.1)),
-        ResizeWithMask(size=(900, 1500), antialias=True),
+        RandomAffineWithMask(degrees=10, translate=(0.05, 0.05)),
+        ResizeWithMask(size=(720, 1280), antialias=True),
         Normalize(),
     ])
 
