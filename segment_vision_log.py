@@ -72,7 +72,7 @@ if __name__ == "__main__":
     parser.add_argument("--path", help="Path to log file", required=True)
     parser.add_argument("--out", default=Path("./results.mp4"), help="Path to output file")
     parser.add_argument("--start", default=300, type=int, help="Start frame")
-    parser.add_argument("--end", default=500, type=int, help="End frame")
+    parser.add_argument("--end", default=800, type=int, help="End frame")
     parser.add_argument("--fps", default=30, type=int, help="FPS of output video")
     parser.add_argument("--display", action="store_true", help="Display video")
     args = parser.parse_args()
