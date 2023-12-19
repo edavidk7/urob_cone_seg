@@ -7,7 +7,7 @@ from torch.optim import SGD, Adam, AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR, StepLR, ReduceLROnPlateau
 
 class_color_jitter = {
-    0: {"hue": (-0.1, 0.1), "saturation": (0.5, 1.5), "brightness": (0.8, 1.2)},
+    0: {"hue": (-0.1, 0.1), "saturation": (0.8, 1.2), "brightness": (0.8, 1.2)},
     1: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
     2: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
     3: {"hue": (-0.5, 0.5), "saturation": (0.5, 1.5), "brightness": (0.5, 1.5)},
@@ -19,7 +19,7 @@ train_T = transforms.Compose(
     [
         ClasswiseColorJitter(class_color_jitter),
         RandomHorizontalFlipWithMask(0.5),
-        RandomAffineWithMask(degrees=10, translate=(0.05, 0.05)),
+        RandomAffineWithMask(degrees=15, translate=(0.05, 0.05)),
         ResizeWithMask(size=(720, 1280), antialias=True),
         Normalize(),
     ])
@@ -35,7 +35,7 @@ config = {
     "model_kwargs": {"num_classes": 6, "num_filters": 256, "use_aspp": True},
     # Optimizer setup
     "optim_type": Adam,
-    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.001},
+    "optim_kwargs": {"lr": 0.001, "weight_decay": 0.0000},
     # Scheduler setup
     "scheduler_type": ReduceLROnPlateau,
     "scheduler_kwargs": {"mode": "min", "factor": 0.5, "patience": 2, "verbose": True},
