@@ -33,7 +33,7 @@ def video_iterator(path):
 
 
 def video_writer(path, fps, size):
-    fourcc = cv2.VideoWriter_fourcc(*'h264')
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
     return cv2.VideoWriter(str(path), fourcc, fps, (size[1] * 2, size[0]), True)
 
 
