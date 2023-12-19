@@ -171,3 +171,6 @@ scratch.ipynb
 wandb
 modules.sh
 *.out
+*.key
+presentation
+vision_for_testing
