@@ -2,6 +2,7 @@ import argparse
 import cv2
 import torch
 import matplotlib.pyplot as plt
+import numpy as np
 from pathlib import Path
 
 # from train_config import eval_T, config
@@ -32,7 +33,6 @@ def segment_vision_log(path, output):
         model = setup_model()
         for i, frame in enumerate(vid):
             print("frame: ", i)
-
             if i < 500:
                 continue
 
@@ -42,10 +42,9 @@ def segment_vision_log(path, output):
             image_tensor = eval_T((image_tensor, empty_mask))[0]
             preds = model(image_tensor.unsqueeze(0))[0]
             mask = mask_tensor_to_rgb(preds)
-            cv2.imshow("frame",frame)
-            cv2.imshow("mask",mask)
+            final_image = np.concatenate((frame, mask), axis=1)
+            cv2.imshow("image",final_image)
             cv2.waitKey(1)
-            print("processing")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
