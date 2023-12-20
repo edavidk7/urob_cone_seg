@@ -329,6 +329,7 @@ if __name__ == "__main__":
                         help="Name of the run for wandb")
     parser.add_argument("--rci", action="store_true", default=False)
     args = parser.parse_args()
+    print("Originally scheduled cores:", os.sched_getaffinity(0))
     if args.name:
         _config["wandb_name"] = args.name
     if args.rci:
