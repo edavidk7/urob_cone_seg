@@ -46,6 +46,16 @@ def image_tensor_to_rgb(img: torch.Tensor, denorm=True):
     return _img.astype(np.uint8)
 
 
+def rgb_image_to_tensor(img: np.ndarray, unsqueeze=True, transform=None):
+    """Convert a numpy RGB image of shape [H, W, 3] to a torch tensor of shape [C, H, W]"""
+    img_tensor = torch.from_numpy(img.transpose(2, 0, 1)).float()
+    if transform is not None:
+        img_tensor, _ = transform((img_tensor, torch.empty(N_CLASSES, img.shape[0], img.shape[1])))
+    if unsqueeze:
+        img_tensor = img_tensor.unsqueeze(0)
+    return img_tensor
+
+
 def blend_from_tensors(img: torch.Tensor, mask: torch.Tensor, denorm=True, alpha=0.5):
     """Blend image tensor and mask tensor to a single RGB image (np.ndarray of shape [H, W, 3])"""
     _img = image_tensor_to_rgb(img, denorm=denorm)

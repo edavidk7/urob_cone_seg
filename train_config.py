@@ -19,7 +19,7 @@ train_T = transforms.Compose(
     [
         ClasswiseColorJitter(class_color_jitter),
         RandomHorizontalFlipWithMask(0.5),
-        RandomAffineWithMask(degrees=20, translate=(0.1, 0.1)),
+        RandomAffineWithMask(degrees=15, translate=(0.05, 0.05), scale=(0.8, 1.2), shear=8),
         ResizeWithMask(size=(720, 1280), antialias=True),
         Normalize(),
     ])
