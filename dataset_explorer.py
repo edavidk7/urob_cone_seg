@@ -12,7 +12,7 @@ except:
 class DatasetExplorer:
     def __init__(self) -> None:
         self.img_mask_pairs = find_mask_img_pairs(config["data_path"], config["imdir"], config["maskdir"])
-        self.dataset = ConeSegmentationDataset(self.img_mask_pairs, Normalize())
+        self.dataset = ConeSegmentationDataset(self.img_mask_pairs, None)
         self.current_idx = 0
         self.fig, self.ax = plt.subplots(1, 2, figsize=(8, 3), dpi=150)
         self.fig.tight_layout()
@@ -35,7 +35,7 @@ class DatasetExplorer:
         self.ax[0].clear()
         self.ax[1].clear()
         img, mask = self.dataset[self.current_idx]
-        visualize_from_torch(img, mask, ax=self.ax, show=False)
+        visualize_mask_img_pair_from_tensor(img, mask, denorm=False, ax=self.ax)
         self.ax[0].set_title(
             f"Image {self.img_mask_pairs[self.current_idx][0].stem}")
         self.ax[1].set_title(
