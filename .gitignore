@@ -170,3 +170,4 @@ scratch.ipynb
 wandb
 *.key
 vision_for_testing
+rc results

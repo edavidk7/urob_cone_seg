@@ -57,9 +57,9 @@ config = {
     "maskdir": "masks",
     "num_epochs": 40,
     "device": "mps",
-    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": True, "num_workers": 8, "batch_size": 16},
-    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": False, "num_workers": 8, "batch_size": 16},
-    "dataparallel": True,
+    "train_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": True, "num_workers": 2, "batch_size": 2},
+    "eval_loader_kwargs": {"pin_memory": True, "persistent_workers": True, "shuffle": False, "num_workers": 2, "batch_size": 2},
+    "dataparallel": False,
     # Logging and evaluation setup
     "save_path": "./train_results",
     "test_best": True,
